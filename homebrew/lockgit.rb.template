@@ -1,0 +1,47 @@
+require 'rbconfig'
+class Lockgit < Formula
+  desc ""
+  homepage "https://github.com/jswidler/lockgit"
+  version "{{.Version}}"
+
+  if Hardware::CPU.is_64_bit?
+    case RbConfig::CONFIG['host_os']
+    when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+      :windows
+    when /darwin|mac os/
+      url "https://github.com/jswidler/lockgit/releases/download/v{{.Version}}/{{.Mac64.FileName}}"
+      sha256 "{{.Mac64.Hash}}"
+    when /linux/
+      url "https://github.com/jswidler/lockgit/releases/download/v{{.Version}}/{{.Linux64.FileName}}"
+      sha256 "{{.Linux64.Hash}}"
+    when /solaris|bsd/
+      :unix
+    else
+      :unknown
+    end
+  else
+    case RbConfig::CONFIG['host_os']
+    when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+      :windows
+    when /darwin|mac os/
+      url "https://github.com/jswidler/lockgit/releases/download/v{{.Version}}/{{.Mac386.FileName}}"
+      sha256 "{{.Mac386.Hash}}"
+    when /linux/
+      url "https://github.com/jswidler/lockgit/releases/download/v{{.Version}}/{{.Linux386.FileName}}"
+      sha256 "{{.Linux386.Hash}}"
+    when /solaris|bsd/
+      :unix
+    else
+      :unknown
+    end
+  end
+
+  def install
+    bin.install "lockgit"
+  end
+
+  test do
+    system "lockgit"
+  end
+
+end

@@ -5,15 +5,30 @@ GOCLEAN      := $(GOCMD) clean
 GOTEST       := $(GOCMD) test
 GOGET        := $(GOCMD) get
 BINARY_NAME  := lockgit
-BINARY_UNIX  := $(BINARY_NAME)_unix
-BINARY_DARW  := $(BINARY_NAME)_darwin
 
+VERSION      ?= snapshot
+GHRFLAGS     ?=
 
 all: test build
 coverage: test cover
 
 build:
+ifndef XCBUILD
 	$(GOBUILD) -o build/$(BINARY_NAME) -v
+else
+	gox -output="build/$(VERSION)/{{.OS}}_{{.Arch}}/$(BINARY_NAME)" -os="darwin linux" -arch="386 amd64"
+	mkdir -p pkg/$(VERSION)
+	zip -j pkg/$(VERSION)/$(BINARY_NAME)_$(VERSION)_darwin_386.zip build/$(VERSION)/darwin_386/$(BINARY_NAME)
+	zip -j pkg/$(VERSION)/$(BINARY_NAME)_$(VERSION)_darwin_amd64.zip build/$(VERSION)/darwin_amd64/$(BINARY_NAME)
+	tar -C build/$(VERSION)/linux_386 -czf pkg/$(VERSION)/$(BINARY_NAME)_$(VERSION)_linux_386.tar.gz $(BINARY_NAME)
+	tar -C build/$(VERSION)/linux_amd64 -czf pkg/$(VERSION)/$(BINARY_NAME)_$(VERSION)_linux_amd64.tar.gz $(BINARY_NAME)
+endif
+
+
+release:
+ifdef XCBUILD
+	ghr  -u jswidler $(GHRFLAGS) v$(VERSION) pkg/$(VERSION)
+endif
 
 test:
 	mkdir -p build
@@ -26,6 +41,7 @@ cover:
 clean:
 	$(GOCLEAN)
 	rm -rf build
+	rm -rf pkg
 
 run:
 	$(GOBUILD) -o build/$(BINARY_NAME) -v
@@ -33,15 +49,9 @@ run:
 
 deps:
 	$(GOGET) github.com/jstemmer/go-junit-report
+	$(GOGET) github.com/mitchellh/gox
 	$(GOGET) github.com/mitchellh/go-homedir
 	$(GOGET) github.com/olekukonko/tablewriter
 	$(GOGET) github.com/pkg/errors
 	$(GOGET) github.com/spf13/cobra
 	$(GOGET) github.com/spf13/viper
-
-
-# Cross compilation
-build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o build/$(BINARY_UNIX) -v
-build-darwin:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) -o build/$(BINARY_DARW) -v
