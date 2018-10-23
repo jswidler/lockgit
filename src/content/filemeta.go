@@ -44,7 +44,6 @@ func NewFilemeta(absPath string, datafile Datafile) Filemeta {
 	}
 }
 
-
 func (f Filemeta) ShaString() string {
 	return base64.RawURLEncoding.EncodeToString(f.Sha)
 }
@@ -53,23 +52,6 @@ func (f Filemeta) String() string {
 	return fmt.Sprintf("%s\t%s", base64.RawURLEncoding.EncodeToString(f.Sha), f.RelPath)
 }
 
-//// 4 byte salt + 20 byte sha1 hash = 24 bytes
-//func hashData(data []byte) []byte {
-//	salt := make([]byte, 4, 24)
-//	_, err := rand.Read(salt);
-//	log.FatalPanic(err)
-//
-//	h := sha1.New()
-//	h.Write(salt)
-//	h.Write(data)
-//
-//	sha := h.Sum(nil)
-//	hash := salt[0:24]
-//	copy(hash[4:], sha)
-//
-//	return hash
-//}
-//
 func (f Filemeta) CompareFileToHash() (bool, error) {
 	h := sha1.New()
 	h.Write(f.Sha[:4])

@@ -32,8 +32,10 @@ import (
 
 // Add a path to the end of the .gitignore file if it is not currently in it.
 // Takes in the .gitingnore path and the files to add to it
-func Add(gitignorepath string, line string) {
-	file, err := openGitignore(gitignorepath)
+func Add(path string, line string) {
+	fullpath := filepath.Join(path, ".gitignore")
+	file, err := os.OpenFile(fullpath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644);
+
 	log.FatalExit(err)
 	defer file.Close()
 
@@ -50,13 +52,4 @@ func Add(gitignorepath string, line string) {
 
 	_, err = fmt.Fprintf(file, "\n%s", line);
 	log.FatalPanic(err)
-}
-
-func openGitignore(path string) (*os.File, error) {
-	fullpath := filepath.Join(path, ".gitignore")
-	file, err := os.OpenFile(fullpath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644);
-	if file != nil {
-		return file, nil
-	}
-	return nil, err
 }
