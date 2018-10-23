@@ -33,7 +33,7 @@ var statusCmd = &cobra.Command{
 	Aliases: []string{"info"},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Status()
+		app.Status(app.Options{Wd:wd})
 	},
 }
 

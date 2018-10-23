@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jswidler/lockgit/src/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -31,10 +32,16 @@ import (
 
 var cfgFile string
 var noUpdateGitignore bool
+var wd string
 
 var rootCmd = &cobra.Command{
 	Use:   "lockgit",
 	Short: "A secret vault for git repos",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		var err error
+		wd, err = os.Getwd()
+		log.FatalPanic(err)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

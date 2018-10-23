@@ -22,7 +22,7 @@ package cmd
 
 import (
 	"github.com/jswidler/lockgit/src/app"
-
+	"github.com/jswidler/lockgit/src/log"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,11 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a lockgit vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.InitVault(app.Params{NoUpdateGitignore:noUpdateGitignore})
+		err := app.InitVault(app.Options{
+			Wd:                wd,
+			NoUpdateGitignore: noUpdateGitignore,
+		})
+		log.FatalExit(err)
 	},
 }
 

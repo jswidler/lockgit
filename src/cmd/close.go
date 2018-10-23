@@ -32,7 +32,7 @@ var closeCmd = &cobra.Command{
 	Aliases:  []string{"clean"},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.CloseVault(app.Params{Force:force})
+		app.CloseVault(app.Options{Wd:wd, Force: force})
 	},
 }
 

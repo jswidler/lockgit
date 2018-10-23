@@ -29,30 +29,50 @@ import (
 
 	"github.com/jswidler/lockgit/src/content"
 	"github.com/jswidler/lockgit/src/context"
+	"github.com/jswidler/lockgit/src/gitignore"
 	"github.com/jswidler/lockgit/src/log"
+	"github.com/jswidler/lockgit/src/util"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 )
 
-type Params struct {
-	NoUpdateGitignore		bool
-	Force					bool
+type Options struct {
+	NoUpdateGitignore bool
+	Force             bool
+	Wd                string
 }
 
-func InitVault(params Params) {
-	projectPath, err := os.Getwd()
+// Initialize a lockgit vault in the working directory.  Returns an error if there is already
+// a lockgit vault in the directory.
+func InitVault(params Options) error {
+	lockgitPath := filepath.Join(params.Wd, ".lockgit")
+	exist, err := util.Exists(lockgitPath)
+	if exist {
+		return fmt.Errorf("Cannot initialize lockgit vault at %s: directory already exists", lockgitPath)
+	} else if err != nil {
+		log.FatalPanic(errors.Wrapf(err, "Cannot initialize lockgit vault at %s", lockgitPath))
+	}
+	err = os.Mkdir(lockgitPath, 0755)
+	log.FatalPanic(errors.Wrap(err, "failed to make .lockgit directory"))
+
+	if !params.NoUpdateGitignore {
+		gitignore.Add(params.Wd, ".lockgit/key")
+	}
+
+	key := genKey()
+	keyPath := filepath.Join(lockgitPath, "key")
+	err = ioutil.WriteFile(keyPath, key, 0644)
 	log.FatalPanic(err)
 
-	err = initVault(projectPath, params)
-	log.FatalExit(err)
+	fmt.Println("Initialized empty lockgit vault in", lockgitPath)
+	return nil
 }
 
+func SetKey(opts Options, keystr string) error {
+	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly: true})
 
-func SetKey(keystr string, force bool) {
-	ctx, _ := loadcm(loadcmopts{ctxOnly:true})
-
-	if !force && ctx.KeyLoaded {
-		log.FatalExit(fmt.Errorf("key already exists, use --force to overwrite"))
+	if !opts.Force && ctx.KeyLoaded {
+		return fmt.Errorf("key already exists, use --force to overwrite")
 	}
 	key, err := keyToBytes(keystr)
 	log.FatalExit(err)
@@ -61,42 +81,55 @@ func SetKey(keystr string, force bool) {
 	log.FatalPanic(err)
 
 	log.Info("key saved")
+	return nil
 }
 
-func RevealKey() {
-	ctx, _ := loadcm(loadcmopts{ctxOnly:true, keyRequired:true})
-	fmt.Println(keyToString(ctx.Key))
+func GetKey(opts Options) string {
+	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly:true, keyRequired:true})
+	return keyToString(ctx.Key)
 }
 
-func Ls() {
-	_, manifest := loadcm(loadcmopts{})
+func Ls(opts Options) []string {
+	_, manifest := loadcm(opts.Wd, loadcmopts{allowEmpty:true})
+	out := make([]string, 0, 32)
 	for _, filemeta := range manifest.Files {
-		fmt.Println(filemeta.RelPath)
+		out = append(out, filemeta.RelPath)
 	}
+	return out
 }
 
-func AddToVault(files []string, params Params) {
-	ctx, manifest := loadcm(loadcmopts{keyRequired:true, allowEmpty:true})
+func AddToVault(opts Options, files []string) error {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true, allowEmpty:true})
 
 	// map inputs to absolute paths
 	pathsToAbs(&files)
 
 	err := ensureSameContext(ctx, files)
-	log.FatalExit(errors.Wrap(err, "failed to add"))
+	if err != nil {
+		return errors.Wrap(err, "failed to add")
+	}
 
+	changes := false
 	for _, filename := range files {
-		err := addFile(ctx, &manifest, filename, params)
+		err := addFile(ctx, &manifest, filename, opts)
 		if err != nil {
-			log.LogError(err)
+			if changes {
+				manifest.Export()
+			}
+			return err
 		} else {
+			changes = true
 			log.Info(fmt.Sprintf("added %s to vault", filename))
 		}
 	}
-	manifest.Export()
+	if changes {
+		manifest.Export()
+	}
+	return nil
 }
 
-func RemoveFromVault(files []string) {
-	ctx, manifest := loadcm(loadcmopts{keyRequired:true})
+func RemoveFromVault(opts Options, files []string) {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true})
 
 	// map inputs to absolute paths
 	pathsToAbs(&files)
@@ -112,10 +145,11 @@ func RemoveFromVault(files []string) {
 	manifest.Export()
 }
 
-func Commit() {
-	ctx, manifest := loadcm(loadcmopts{keyRequired:true})
+func Commit(opts Options) error {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true})
+	opts.Force = true // for addFile
+
 	changes := false
-	params := Params{Force:true}
 	for _, filemeta := range manifest.Files {
 		datafile, err := content.NewDatafile(ctx, filemeta.AbsPath)
 		if err != nil && !os.IsNotExist(err) {
@@ -123,12 +157,15 @@ func Commit() {
 			continue
 		}
 		if !datafile.MatchesHash(filemeta.Sha) {
-			err := addFile(ctx, &manifest, filemeta.AbsPath, params)
+			err := addFile(ctx, &manifest, filemeta.AbsPath, opts)
 			if err != nil {
-				log.LogError(err)
+				if changes {
+					manifest.Export()
+				}
+				return err
 			} else {
-				log.Info(fmt.Sprintf("%s updated", filemeta.AbsPath))
 				changes = true
+				log.Info(fmt.Sprintf("%s updated", filemeta.AbsPath))
 			}
 		}
 	}
@@ -137,10 +174,11 @@ func Commit() {
 	} else {
 		manifest.Export()
 	}
+	return nil
 }
 
-func Status() {
-	ctx, manifest := loadcm(loadcmopts{filesRequired:true})
+func Status(opts Options) {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{filesRequired:true})
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"file", "updated", "hash"})
@@ -164,19 +202,19 @@ func Status() {
 	table.Render()
 }
 
-func OpenVault(params Params) {
-	ctx, manifest := loadcm(loadcmopts{keyRequired:true, filesRequired:true})
+func OpenVault(opts Options) {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true, filesRequired:true})
 	for _, filemeta := range manifest.Files {
-		if err := openFromVault(ctx, filemeta, params); err != nil {
+		if err := openFromVault(ctx, filemeta, opts); err != nil {
 			log.LogError(errors.Wrapf(err, "error extracting secret"))
 		}
 	}
 }
 
-func CloseVault(params Params) {
-	ctx, manifest := loadcm(loadcmopts{keyRequired:true, filesRequired:true})
+func CloseVault(opts Options) {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true, filesRequired:true})
 	for _, filemeta := range manifest.Files {
-		if err := deletePlaintextFile(ctx, filemeta, params); err != nil {
+		if err := deletePlaintextFile(ctx, filemeta, opts); err != nil {
 			log.LogError(err)
 		}
 	}
@@ -188,8 +226,9 @@ type loadcmopts struct {
 	filesRequired   bool
 	allowEmpty      bool
 }
-func loadcm(opts loadcmopts) (context.Context, content.Manifest) {
-	ctx, err := context.FromWd(opts.keyRequired)
+func loadcm(wd string, opts loadcmopts) (context.Context, content.Manifest) {
+	ctx, err := context.FromPath(wd, opts.keyRequired)
+
 	if err != nil {
 		log.FatalExit(errors.Wrap(err, "unable to load lockgit"))
 	} else if opts.ctxOnly {
@@ -206,6 +245,7 @@ func loadcm(opts loadcmopts) (context.Context, content.Manifest) {
 
 func pathsToAbs(files *[]string) {
 	for i, file := range *files {
+
 		path, err := filepath.Abs(file)
 		if err != nil {
 			log.FatalPanic(errors.Wrapf(err, "cannot make absolute path from %s", file))

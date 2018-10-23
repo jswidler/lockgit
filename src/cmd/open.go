@@ -31,7 +31,7 @@ var openCmd = &cobra.Command{
 	Short: "Decrypt and restore secrets in the vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.OpenVault(app.Params{Force:force})
+		app.OpenVault(app.Options{Wd:wd, Force: force})
 	},
 }
 

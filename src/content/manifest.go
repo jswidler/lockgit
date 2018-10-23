@@ -40,27 +40,9 @@ type Manifest struct {
 	path	string
 }
 
-func NewManifest() Manifest {
-	return Manifest{
-		Files: make([]Filemeta, 0, 32),
-		path: "./manifest",
-	}
-}
-
 func (m Manifest) Export() {
 	err := ioutil.WriteFile(m.path, m.serialize(), 0644)
 	log.FatalPanic(err)
-}
-
-func (m Manifest) Verify() {
-	for _, filemeta := range m.Files {
-		match, err := filemeta.CompareFileToHash()
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println(filemeta.RelPath, match)
-		}
-	}
 }
 
 func ImportManifest(ctx context.Context) Manifest {
@@ -106,10 +88,6 @@ func (m Manifest) Find(projRelPath string) int {
 func (m *Manifest) Add(filemeta Filemeta) {
 	m.Files = append(m.Files, filemeta)
 	m.sort()
-}
-
-func (m Manifest) String() string {
-	return string(m.serialize())
 }
 
 func (m Manifest) serialize() []byte {

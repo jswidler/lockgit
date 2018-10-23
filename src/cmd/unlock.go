@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/src/log"
 	"github.com/spf13/cobra"
 )
 
@@ -40,12 +41,10 @@ The key for the vault can be displayed using the reveal-key command.`,
 			fmt.Fprint(os.Stderr, "invalid key\n")
 			os.Exit(1)
 		}
-		app.SetKey(args[0], force)
+		err := app.SetKey(app.Options{Wd: wd, Force: force}, args[0])
+		log.FatalExit(err)
 	},
 }
-
-
-var forceUnlock *bool
 
 func init() {
 	rootCmd.AddCommand(unlockCmd)

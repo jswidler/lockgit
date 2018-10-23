@@ -21,6 +21,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/jswidler/lockgit/src/app"
 
 	"github.com/spf13/cobra"
@@ -32,7 +34,10 @@ var lsCmd = &cobra.Command{
 	Short: "List the files in the lockgit vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Ls()
+		files := app.Ls(app.Options{Wd: wd})
+		for _, f := range files {
+			fmt.Println(f)
+		}
 	},
 }
 

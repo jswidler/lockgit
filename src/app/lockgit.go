@@ -38,33 +38,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-
-func initVault(projectPath string, params Params) error {
-	lockgitPath := filepath.Join(projectPath, ".lockgit")
-	exist, err := u.Exists(lockgitPath)
-	if exist {
-		return fmt.Errorf("Cannot initialize lockgit vault at %s: directory already exists", lockgitPath)
-	} else if err != nil {
-		log.FatalPanic(errors.Wrapf(err, "Cannot initialize lockgit vault at %s", lockgitPath))
-	}
-	err = os.Mkdir(lockgitPath, 0755)
-	log.FatalPanic(errors.Wrap(err, "failed to make .lockgit directory"))
-
-	if !params.NoUpdateGitignore {
-		gitignore.Add(projectPath, ".lockgit/key")
-	}
-
-	key := genKey()
-	keyPath := filepath.Join(lockgitPath, "key")
-	err = ioutil.WriteFile(keyPath, key, 0644)
-	log.FatalPanic(err)
-
-	fmt.Println("Initialized empty lockgit vault in", lockgitPath)
-	return nil
-}
-
-
-func openFromVault(ctx context.Context, filemeta c.Filemeta, params Params) error {
+func openFromVault(ctx context.Context, filemeta c.Filemeta, params Options) error {
 	if !params.Force {
 		matches, err := filemeta.CompareFileToHash()
 		if matches {
@@ -97,7 +71,7 @@ func openFromVault(ctx context.Context, filemeta c.Filemeta, params Params) erro
 	return nil
 }
 
-func deletePlaintextFile(ctx context.Context, filemeta c.Filemeta, params Params) error {
+func deletePlaintextFile(ctx context.Context, filemeta c.Filemeta, params Options) error {
 	exists, err := u.Exists(filemeta.AbsPath)
 	if err != nil {
 		return err
@@ -123,7 +97,7 @@ func deletePlaintextFile(ctx context.Context, filemeta c.Filemeta, params Params
 	return nil
 }
 
-func addFile(ctx context.Context, manifest *c.Manifest, absPath string, params Params) error {
+func addFile(ctx context.Context, manifest *c.Manifest, absPath string, params Options) error {
 	// the location of the file relative to project path
 	relPath, err := filepath.Rel(ctx.ProjectPath, absPath)
 	if err != nil {
@@ -181,7 +155,7 @@ func deleteFileFromVault(ctx context.Context, manifest *c.Manifest, absPath stri
 	}
 	mindx := manifest.Find(relPath)
 	if mindx < 0 {
-		return fmt.Errorf("not found in manifest", absPath)
+		return fmt.Errorf("not found in manifest %s", relPath)
 	}
 
 	datafilepath := c.MakeDatafilePath(ctx, manifest.Files[mindx])

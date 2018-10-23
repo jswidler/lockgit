@@ -21,6 +21,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/jswidler/lockgit/src/app"
 
 	"github.com/spf13/cobra"
@@ -32,7 +34,8 @@ var revealCmd = &cobra.Command{
 	Short: "Reveal the lockgit key for the current repo",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.RevealKey()
+		key := app.GetKey(app.Options{Wd: wd})
+		fmt.Println(key)
 	},
 }
 
