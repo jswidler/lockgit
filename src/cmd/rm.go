@@ -32,7 +32,7 @@ var rmCmd = &cobra.Command{
 	Aliases: []string{"remove"},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.RemoveFromVault(args)
+		app.RemoveFromVault(app.Options{Wd:wd}, args)
 	},
 }
 

@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/src/log"
 	"github.com/spf13/cobra"
 )
 
@@ -31,10 +32,12 @@ var addCmd = &cobra.Command{
 	Short: "Add files to the vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.AddToVault(args, app.Params{
+		err := app.AddToVault(app.Options{
+			Wd:                wd,
 			NoUpdateGitignore: noUpdateGitignore,
-			Force: force,
-		})
+			Force:             force,
+		}, args)
+		log.FatalExit(err)
 	},
 }
 

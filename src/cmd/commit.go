@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/src/log"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +32,8 @@ var commitCmd = &cobra.Command{
 	Short: "Commit changes of tracked files to the vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Commit()
+		err := app.Commit(app.Options{Wd:wd})
+		log.FatalExit(err)
 	},
 }
 

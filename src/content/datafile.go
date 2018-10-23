@@ -150,14 +150,11 @@ func decompress(data []byte) []byte {
 
 func encrypt(key, plaintext []byte) []byte {
 	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err)
-	}
+	log.FatalPanic(err)
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		panic(err)
-	}
+	_, err = io.ReadFull(rand.Reader, iv);
+	log.FatalPanic(err)
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
 	return ciphertext
@@ -165,9 +162,7 @@ func encrypt(key, plaintext []byte) []byte {
 
 func decrypt(key, ciphertext []byte) []byte {
 	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err)
-	}
+	log.FatalPanic(err)
 	if len(ciphertext) < aes.BlockSize {
 		panic("blocksize is too small")
 	}

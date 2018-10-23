@@ -42,18 +42,6 @@ type Context struct {
 	KeyLoaded    bool   // true if the key was loaded
 }
 
-// Return a Context using the working directory as the start of the search.
-// The context will be from the first .lockgit directory found
-func FromWd(keyRequired bool) (Context, error) {
-	wd, err := os.Getwd()
-	log.FatalPanic(err)
-
-	context, err := FromPath(wd, keyRequired)
-	context.WorkingPath = wd
-	return context, err
-}
-
-
 // Return a Context provided a base to begin traversal from.
 // The context will be from the first .lockgit directory found
 func FromPath(path string, keyRequired bool) (Context, error) {
@@ -68,7 +56,7 @@ func FromPath(path string, keyRequired bool) (Context, error) {
 	if err != nil {
 		return c, err
 	}
-
+	c.WorkingPath = pathabs
 	c.LockgitPath = lockgitPath
 	c.ProjectPath = filepath.Dir(lockgitPath)
 	c.DataPath = filepath.Join(lockgitPath, "data")
