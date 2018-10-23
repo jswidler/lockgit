@@ -1,0 +1,19 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/jswidler/lockgit
+    docker:
+    - image: circleci/golang:1.11
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - cache2
+    - run: make deps
+    - save_cache:
+        key: cache2
+        paths:
+        - ~/.cache/go-build
+    - run: make test
+    - store_test_results:
+        path: build
