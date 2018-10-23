@@ -10,12 +10,16 @@ BINARY_DARW  := $(BINARY_NAME)_darwin
 
 
 all: test build
+coverage: test cover
+
 build:
 	$(GOBUILD) -o build/$(BINARY_NAME) -v
 
 test:
 	mkdir -p build
 	$(GOTEST) -v ./... -coverpkg='github.com/jswidler/lockgit/src/...' -coverprofile=build/c.out | tee build/go-test.out
+
+cover:
 	go tool cover -html=build/c.out -o build/coverage.html
 	go-junit-report <build/go-test.out > build/go-test-report.xml
 
