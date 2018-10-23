@@ -172,7 +172,7 @@ func ensureSameContext(ctx context.Context, files []string) error {
 			fileRelWd := relativeIfPossible(ctx.WorkingPath, filename)
 			altLockgitRelWd := relativeIfPossible(ctx.WorkingPath, lockgit)
 			lockgitRelWd := relativeIfPossible(ctx.WorkingPath, ctx.LockgitPath)
-			return fmt.Errorf("%s is in vault %s and not expected vault %s", fileRelWd, altLockgitRelWd, lockgitRelWd)
+			return fmt.Errorf("%s is in vault %s and not in the active vault %s", fileRelWd, altLockgitRelWd, lockgitRelWd)
 		}
 	}
 	return nil
