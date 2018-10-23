@@ -1,11 +1,11 @@
-require 'rbconfig'
+require "rbconfig"
 class Lockgit < Formula
-  desc "Lockgit is a CLI tool for storing encrypted secrets in a git repo"
+  desc "a CLI tool for storing encrypted secrets in a git repo"
   homepage "https://github.com/jswidler/lockgit"
   version "0.5.0"
 
   if Hardware::CPU.is_64_bit?
-    case RbConfig::CONFIG['host_os']
+    case RbConfig::CONFIG["host_os"]
     when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
       :windows
     when /darwin|mac os/
@@ -20,7 +20,7 @@ class Lockgit < Formula
       :unknown
     end
   else
-    case RbConfig::CONFIG['host_os']
+    case RbConfig::CONFIG["host_os"]
     when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
       :windows
     when /darwin|mac os/
@@ -41,7 +41,6 @@ class Lockgit < Formula
   end
 
   test do
-    system "lockgit"
+    system "#{bin}/lockgit"
   end
-
 end
