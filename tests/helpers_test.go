@@ -19,7 +19,7 @@ func setupVault(t *testing.T, params app.Options) {
 
 func opts(dir string) app.Options {
 	wd, _ := os.Getwd()
-	return app.Options{Wd:filepath.Join(wd, "testing-output", dir)}
+	return app.Options{Wd:filepath.Join(wd, "..", "build", "test", "vaults", dir)}
 }
 
 func cleanDir(path string) {
