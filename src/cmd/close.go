@@ -27,12 +27,12 @@ import (
 
 // closeCmd represents the close command
 var closeCmd = &cobra.Command{
-	Use:   "close",
-	Short: "Delete plaintext secrets",
-	Aliases:  []string{"clean"},
+	Use:     "close",
+	Short:   "Delete plaintext secrets",
+	Aliases: []string{"clean"},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.CloseVault(app.Options{Wd:wd, Force: force})
+		app.CloseVault(app.Options{Wd: wd, Force: force})
 	},
 }
 

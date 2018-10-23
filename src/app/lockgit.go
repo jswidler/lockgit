@@ -30,10 +30,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	c "github.com/jswidler/lockgit/src/content"
 	"github.com/jswidler/lockgit/src/context"
 	"github.com/jswidler/lockgit/src/gitignore"
 	"github.com/jswidler/lockgit/src/log"
-	c "github.com/jswidler/lockgit/src/content"
 	u "github.com/jswidler/lockgit/src/util"
 	"github.com/pkg/errors"
 )
@@ -75,7 +75,7 @@ func deletePlaintextFile(ctx context.Context, filemeta c.Filemeta, params Option
 	exists, err := u.Exists(filemeta.AbsPath)
 	if err != nil {
 		return err
-	} else if (!exists) {
+	} else if !exists {
 		return nil
 	}
 
@@ -124,7 +124,7 @@ func addFile(ctx context.Context, manifest *c.Manifest, absPath string, params O
 	filedata, err := ioutil.ReadFile(absPath)
 	log.FatalPanic(err)
 	datafile := c.Datafile{
-		Ver: 1,
+		Ver:  1,
 		Data: base64.RawStdEncoding.EncodeToString(filedata),
 		Path: relPath,
 		Perm: int(info.Mode().Perm()),
@@ -148,7 +148,7 @@ func addFile(ctx context.Context, manifest *c.Manifest, absPath string, params O
 	return nil
 }
 
-func deleteFileFromVault(ctx context.Context, manifest *c.Manifest, absPath string) (error) {
+func deleteFileFromVault(ctx context.Context, manifest *c.Manifest, absPath string) error {
 	relPath, err := filepath.Rel(ctx.ProjectPath, absPath)
 	if err != nil {
 		return err

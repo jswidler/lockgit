@@ -85,12 +85,12 @@ func SetKey(opts Options, keystr string) error {
 }
 
 func GetKey(opts Options) string {
-	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly:true, keyRequired:true})
+	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly: true, keyRequired: true})
 	return keyToString(ctx.Key)
 }
 
 func Ls(opts Options) []string {
-	_, manifest := loadcm(opts.Wd, loadcmopts{allowEmpty:true})
+	_, manifest := loadcm(opts.Wd, loadcmopts{allowEmpty: true})
 	out := make([]string, 0, 32)
 	for _, filemeta := range manifest.Files {
 		out = append(out, filemeta.RelPath)
@@ -99,7 +99,7 @@ func Ls(opts Options) []string {
 }
 
 func AddToVault(opts Options, files []string) error {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true, allowEmpty:true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, allowEmpty: true})
 
 	// map inputs to absolute paths
 	pathsToAbs(&files)
@@ -129,7 +129,7 @@ func AddToVault(opts Options, files []string) error {
 }
 
 func RemoveFromVault(opts Options, files []string) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true})
 
 	// map inputs to absolute paths
 	pathsToAbs(&files)
@@ -146,7 +146,7 @@ func RemoveFromVault(opts Options, files []string) {
 }
 
 func Commit(opts Options) error {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true})
 	opts.Force = true // for addFile
 
 	changes := false
@@ -178,7 +178,7 @@ func Commit(opts Options) error {
 }
 
 func Status(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{filesRequired:true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{filesRequired: true})
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"file", "updated", "hash"})
@@ -203,7 +203,7 @@ func Status(opts Options) {
 }
 
 func OpenVault(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true, filesRequired:true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, filesRequired: true})
 	for _, filemeta := range manifest.Files {
 		if err := openFromVault(ctx, filemeta, opts); err != nil {
 			log.LogError(errors.Wrapf(err, "error extracting secret"))
@@ -212,7 +212,7 @@ func OpenVault(opts Options) {
 }
 
 func CloseVault(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired:true, filesRequired:true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, filesRequired: true})
 	for _, filemeta := range manifest.Files {
 		if err := deletePlaintextFile(ctx, filemeta, opts); err != nil {
 			log.LogError(err)
@@ -221,11 +221,12 @@ func CloseVault(opts Options) {
 }
 
 type loadcmopts struct {
-	ctxOnly			bool
-	keyRequired     bool
-	filesRequired   bool
-	allowEmpty      bool
+	ctxOnly       bool
+	keyRequired   bool
+	filesRequired bool
+	allowEmpty    bool
 }
+
 func loadcm(wd string, opts loadcmopts) (context.Context, content.Manifest) {
 	ctx, err := context.FromPath(wd, opts.keyRequired)
 

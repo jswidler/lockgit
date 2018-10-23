@@ -34,7 +34,7 @@ import (
 // Takes in the .gitingnore path and the files to add to it
 func Add(path string, line string) {
 	fullpath := filepath.Join(path, ".gitignore")
-	file, err := os.OpenFile(fullpath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644);
+	file, err := os.OpenFile(fullpath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
 
 	log.FatalExit(err)
 	defer file.Close()
@@ -50,6 +50,6 @@ func Add(path string, line string) {
 	err = scanner.Err()
 	log.FatalPanic(err)
 
-	_, err = fmt.Fprintf(file, "\n%s", line);
+	_, err = fmt.Fprintf(file, "\n%s", line)
 	log.FatalPanic(err)
 }

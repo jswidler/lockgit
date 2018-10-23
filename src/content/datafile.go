@@ -40,15 +40,15 @@ import (
 )
 
 type Datafile struct {
-	Ver			int
-	Data		string
-	Path		string
-	Perm		int
+	Ver  int
+	Data string
+	Path string
+	Perm int
 }
 
 func NewDatafile(ctx context.Context, path string) (Datafile, error) {
 	d := Datafile{}
-	absPath, err:= filepath.Abs(path);
+	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return d, err
 	}
@@ -67,14 +67,13 @@ func NewDatafile(ctx context.Context, path string) (Datafile, error) {
 		return d, errors.Wrap(err, "unable to read")
 	}
 	datafile := Datafile{
-		Ver: 1,
+		Ver:  1,
 		Data: base64.RawStdEncoding.EncodeToString(filedata),
 		Path: relPath,
 		Perm: int(info.Mode().Perm()),
 	}
 	return datafile, nil
 }
-
 
 func (d Datafile) Serialize() []byte {
 	jsondata, err := json.Marshal(d)
@@ -95,7 +94,7 @@ func MakeDatafilePath(ctx context.Context, filemeta Filemeta) string {
 
 func (d Datafile) Hash() []byte {
 	salt := make([]byte, 4, 24)
-	_, err := rand.Read(salt);
+	_, err := rand.Read(salt)
 	log.FatalPanic(err)
 
 	h := sha1.New()
@@ -153,7 +152,7 @@ func encrypt(key, plaintext []byte) []byte {
 	log.FatalPanic(err)
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
-	_, err = io.ReadFull(rand.Reader, iv);
+	_, err = io.ReadFull(rand.Reader, iv)
 	log.FatalPanic(err)
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)

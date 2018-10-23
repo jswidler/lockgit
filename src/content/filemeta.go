@@ -56,7 +56,7 @@ func (f Filemeta) CompareFileToHash() (bool, error) {
 	h := sha1.New()
 	h.Write(f.Sha[:4])
 
-	err := readIn(f.AbsPath, h);
+	err := readIn(f.AbsPath, h)
 	if err != nil {
 		return false, err
 	}

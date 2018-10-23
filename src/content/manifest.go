@@ -37,7 +37,7 @@ import (
 
 type Manifest struct {
 	Files []Filemeta
-	path	string
+	path  string
 }
 
 func (m Manifest) Export() {
@@ -48,7 +48,7 @@ func (m Manifest) Export() {
 func ImportManifest(ctx context.Context) Manifest {
 	m := Manifest{
 		Files: make([]Filemeta, 0, 32),
-		path: ctx.ManifestPath,
+		path:  ctx.ManifestPath,
 	}
 	file, err := os.Open(ctx.ManifestPath)
 	if os.IsNotExist(err) {
@@ -68,7 +68,7 @@ func ImportManifest(ctx context.Context) Manifest {
 		if err != nil {
 			log.FatalExit(fmt.Errorf("%s does not have the expected format", ctx.ManifestPath))
 		}
-		m.Add(Filemeta{Sha:sha, RelPath:tokens[1], AbsPath: filepath.Join(ctx.ProjectPath, tokens[1])})
+		m.Add(Filemeta{Sha: sha, RelPath: tokens[1], AbsPath: filepath.Join(ctx.ProjectPath, tokens[1])})
 	}
 
 	err = scanner.Err()

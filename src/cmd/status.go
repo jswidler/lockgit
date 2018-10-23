@@ -28,12 +28,12 @@ import (
 
 // revealCmd represents the reveal command
 var statusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Check if the secrets present match the ones in the vault",
+	Use:     "status",
+	Short:   "Check if the secrets present match the ones in the vault",
 	Aliases: []string{"info"},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Status(app.Options{Wd:wd})
+		app.Status(app.Options{Wd: wd})
 	},
 }
 

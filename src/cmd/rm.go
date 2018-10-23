@@ -27,12 +27,12 @@ import (
 
 // rmCmd represents the rm command
 var rmCmd = &cobra.Command{
-	Use:   "rm <file> ...",
-	Short: "Remove files from the vault",
+	Use:     "rm <file> ...",
+	Short:   "Remove files from the vault",
 	Aliases: []string{"remove"},
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.RemoveFromVault(app.Options{Wd:wd}, args)
+		app.RemoveFromVault(app.Options{Wd: wd}, args)
 	},
 }
 
