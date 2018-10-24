@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jswidler/lockgit/src/log"
+	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

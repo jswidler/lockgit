@@ -21,22 +21,24 @@
 package cmd
 
 import (
-	"github.com/jswidler/lockgit/src/app"
+	"fmt"
+
+	"github.com/jswidler/lockgit/pkg/app"
+
 	"github.com/spf13/cobra"
 )
 
-// closeCmd represents the close command
-var closeCmd = &cobra.Command{
-	Use:     "close",
-	Short:   "Delete plaintext secrets",
-	Aliases: []string{"clean"},
+// revealCmd represents the reveal command
+var revealCmd = &cobra.Command{
+	Use:   "reveal-key",
+	Short: "Reveal the lockgit key for the current repo",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.CloseVault(app.Options{Wd: wd, Force: force})
+		key := app.GetKey(app.Options{Wd: wd})
+		fmt.Println(key)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(closeCmd)
-	addForceFlag(closeCmd, "delete files even if they have changed")
+	rootCmd.AddCommand(revealCmd)
 }

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/pkg/app"
 )
 
 func TestInitVaultSuccess(t *testing.T) {

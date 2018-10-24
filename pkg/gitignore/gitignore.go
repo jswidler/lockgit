@@ -18,31 +18,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package cmd
+package gitignore
 
 import (
-	"github.com/jswidler/lockgit/src/app"
-	"github.com/jswidler/lockgit/src/log"
-	"github.com/spf13/cobra"
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/jswidler/lockgit/pkg/log"
 )
 
-// addCmd represents the add command
-var addCmd = &cobra.Command{
-	Use:   "add <file> ...",
-	Short: "Add files to the vault",
+// Add a path to the end of the .gitignore file if it is not currently in it.
+// Takes in the .gitingnore path and the files to add to it
+func Add(path string, line string) {
+	fullpath := filepath.Join(path, ".gitignore")
+	file, err := os.OpenFile(fullpath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
 
-	Run: func(cmd *cobra.Command, args []string) {
-		err := app.AddToVault(app.Options{
-			Wd:                wd,
-			NoUpdateGitignore: noUpdateGitignore,
-			Force:             force,
-		}, args)
-		log.FatalExit(err)
-	},
-}
+	log.FatalExit(err)
+	defer file.Close()
 
-func init() {
-	rootCmd.AddCommand(addCmd)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		text := scanner.Text()
+		if strings.TrimSpace(text) == line {
+			return
+		}
+	}
 
-	addForceFlag(addCmd, "allow overwriting of an existing secret")
+	err = scanner.Err()
+	log.FatalPanic(err)
+
+	_, err = fmt.Fprintf(file, "\n%s", line)
+	log.FatalPanic(err)
 }

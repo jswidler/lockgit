@@ -9,8 +9,7 @@ class Lockgit < Formula
 
   def install
     ENV["GOPATH"] = buildpath
-    (buildpath/"tmp/github.com/jswidler/lockgit").install buildpath.children
-    mv "tmp", "src"
+    (buildpath/"src/github.com/jswidler/lockgit").install buildpath.children
     cd "src/github.com/jswidler/lockgit" do
       system "make", "deps"
       system "make", "build"

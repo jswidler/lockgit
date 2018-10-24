@@ -27,11 +27,11 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/jswidler/lockgit/src/content"
-	"github.com/jswidler/lockgit/src/context"
-	"github.com/jswidler/lockgit/src/gitignore"
-	"github.com/jswidler/lockgit/src/log"
-	"github.com/jswidler/lockgit/src/util"
+	"github.com/jswidler/lockgit/pkg/content"
+	"github.com/jswidler/lockgit/pkg/context"
+	"github.com/jswidler/lockgit/pkg/gitignore"
+	"github.com/jswidler/lockgit/pkg/log"
+	"github.com/jswidler/lockgit/pkg/util"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 )

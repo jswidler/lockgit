@@ -21,21 +21,26 @@
 package cmd
 
 import (
-	"github.com/jswidler/lockgit/src/app"
+	"fmt"
+
+	"github.com/jswidler/lockgit/pkg/app"
+
 	"github.com/spf13/cobra"
 )
 
-// rmCmd represents the rm command
-var rmCmd = &cobra.Command{
-	Use:     "rm <file> ...",
-	Short:   "Remove files from the vault",
-	Aliases: []string{"remove"},
+// revealCmd represents the reveal command
+var lsCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "List the files in the lockgit vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.RemoveFromVault(app.Options{Wd: wd}, args)
+		files := app.Ls(app.Options{Wd: wd})
+		for _, f := range files {
+			fmt.Println(f)
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(rmCmd)
+	rootCmd.AddCommand(lsCmd)
 }

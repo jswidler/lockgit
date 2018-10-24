@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/pkg/app"
 )
 
 func setupVault(t *testing.T, params app.Options) {

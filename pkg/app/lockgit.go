@@ -30,11 +30,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	c "github.com/jswidler/lockgit/src/content"
-	"github.com/jswidler/lockgit/src/context"
-	"github.com/jswidler/lockgit/src/gitignore"
-	"github.com/jswidler/lockgit/src/log"
-	u "github.com/jswidler/lockgit/src/util"
+	c "github.com/jswidler/lockgit/pkg/content"
+	"github.com/jswidler/lockgit/pkg/context"
+	"github.com/jswidler/lockgit/pkg/gitignore"
+	"github.com/jswidler/lockgit/pkg/log"
+	u "github.com/jswidler/lockgit/pkg/util"
 	"github.com/pkg/errors"
 )
 

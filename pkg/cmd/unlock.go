@@ -22,23 +22,32 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/jswidler/lockgit/src/app"
-
+	"github.com/jswidler/lockgit/pkg/app"
+	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/spf13/cobra"
 )
 
-// revealCmd represents the reveal command
-var revealCmd = &cobra.Command{
-	Use:   "reveal-key",
-	Short: "Reveal the lockgit key for the current repo",
+// unlockCmd represents the unlock command
+var unlockCmd = &cobra.Command{
+	Use:   "unlock <KEY>",
+	Short: "Set the key for the current vault",
+	Long: `Set the key for the current vault.
 
+The key for the vault can be displayed using the reveal-key command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		key := app.GetKey(app.Options{Wd: wd})
-		fmt.Println(key)
+		if len(args) != 1 {
+			fmt.Fprint(os.Stderr, "invalid key\n")
+			os.Exit(1)
+		}
+		err := app.SetKey(app.Options{Wd: wd, Force: force}, args[0])
+		log.FatalExit(err)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(revealCmd)
+	rootCmd.AddCommand(unlockCmd)
+
+	addForceFlag(unlockCmd, "allow overwriting of an existing key")
 }

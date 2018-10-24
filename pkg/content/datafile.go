@@ -34,8 +34,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jswidler/lockgit/src/context"
-	"github.com/jswidler/lockgit/src/log"
+	"github.com/jswidler/lockgit/pkg/context"
+	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/pkg/errors"
 )
 

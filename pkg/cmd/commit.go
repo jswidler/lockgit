@@ -21,8 +21,8 @@
 package cmd
 
 import (
-	"github.com/jswidler/lockgit/src/app"
-	"github.com/jswidler/lockgit/src/log"
+	"github.com/jswidler/lockgit/pkg/app"
+	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/spf13/cobra"
 )
 

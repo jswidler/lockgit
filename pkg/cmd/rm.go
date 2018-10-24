@@ -18,38 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package gitignore
+package cmd
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
-	"github.com/jswidler/lockgit/src/log"
+	"github.com/jswidler/lockgit/pkg/app"
+	"github.com/spf13/cobra"
 )
 
-// Add a path to the end of the .gitignore file if it is not currently in it.
-// Takes in the .gitingnore path and the files to add to it
-func Add(path string, line string) {
-	fullpath := filepath.Join(path, ".gitignore")
-	file, err := os.OpenFile(fullpath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
+// rmCmd represents the rm command
+var rmCmd = &cobra.Command{
+	Use:     "rm <file> ...",
+	Short:   "Remove files from the vault",
+	Aliases: []string{"remove"},
 
-	log.FatalExit(err)
-	defer file.Close()
+	Run: func(cmd *cobra.Command, args []string) {
+		app.RemoveFromVault(app.Options{Wd: wd}, args)
+	},
+}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		text := scanner.Text()
-		if strings.TrimSpace(text) == line {
-			return
-		}
-	}
-
-	err = scanner.Err()
-	log.FatalPanic(err)
-
-	_, err = fmt.Fprintf(file, "\n%s", line)
-	log.FatalPanic(err)
+func init() {
+	rootCmd.AddCommand(rmCmd)
 }

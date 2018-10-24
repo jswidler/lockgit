@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/pkg/app"
 )
 
 const data1 = "this is some data"

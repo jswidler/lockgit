@@ -20,7 +20,7 @@
 
 package main
 
-import "github.com/jswidler/lockgit/src/cmd"
+import "github.com/jswidler/lockgit/pkg/cmd"
 
 func main() {
 	cmd.Execute()

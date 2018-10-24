@@ -21,22 +21,28 @@
 package cmd
 
 import (
-	"github.com/jswidler/lockgit/src/app"
-
+	"github.com/jswidler/lockgit/pkg/app"
+	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/spf13/cobra"
 )
 
-// revealCmd represents the reveal command
-var statusCmd = &cobra.Command{
-	Use:     "status",
-	Short:   "Check if the secrets present match the ones in the vault",
-	Aliases: []string{"info"},
+// addCmd represents the add command
+var addCmd = &cobra.Command{
+	Use:   "add <file> ...",
+	Short: "Add files to the vault",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Status(app.Options{Wd: wd})
+		err := app.AddToVault(app.Options{
+			Wd:                wd,
+			NoUpdateGitignore: noUpdateGitignore,
+			Force:             force,
+		}, args)
+		log.FatalExit(err)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(addCmd)
+
+	addForceFlag(addCmd, "allow overwriting of an existing secret")
 }

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jswidler/lockgit/src/app"
+	"github.com/jswidler/lockgit/pkg/app"
 )
 
 const testKey = "X57J6W76UA6HXQ7VZ5KLLMMVYGVHTTGNQS3EJPR6AOQRP2WBZAUQ"
