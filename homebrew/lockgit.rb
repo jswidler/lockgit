@@ -1,6 +1,6 @@
 require "rbconfig"
 class Lockgit < Formula
-  desc "a CLI tool for storing encrypted secrets in a git repo"
+  desc "A CLI tool for storing encrypted secrets in a git repo"
   homepage "https://github.com/jswidler/lockgit"
   version "0.5.0"
 

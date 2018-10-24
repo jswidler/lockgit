@@ -5,6 +5,37 @@ Yet, many people require a place to store secrets and git is a useful tool that 
 are used to using. So - enter __Lockgit__, a tool to make it easy to use encryption
 to safely store secrets in a git repository.
 
+## Getting Started
+
+Lockgit can be easily installed as a binary with either Homebrew on OSX or Linuxbrew
+on Linux.
+
+```
+brew install jswidler/tap/lockgit
+```
+
+You can also easily build from source with `go get github.com/jswidler/lockgit`.
+
+### List of commands
+
+```
+Usage:
+  lockgit [command]
+
+Available Commands:
+  init        Initialize a lockgit vault
+  reveal-key  Reveal the lockgit key for the current repo
+  unlock      Set the key for the current vault
+  ls          List the files in the lockgit vault
+  add         Add files to the vault
+  commit      Commit changes of tracked files to the vault
+  rm          Remove files from the vault
+  open        Decrypt and restore secrets in the vault
+  close       Delete plaintext secrets
+  status      Check if the secrets present match the ones in the vault
+  help        Help about any command
+```
+
 
 ## Using Lockgit
 
@@ -108,8 +139,8 @@ modified:   .lockgit/manifest
 
 The two files in `.lockgit/data` are the encrypted secrets.
 
-The manifest is a text file can be easily examined.  This makes it possible to understand what
-secrets people are changing.
+The manifest is a text file that can be easily examined.  This makes it possible to
+see what secrets people are changing when reviewing commits.
 
 ```
 $ cat .lockgit/manifest
