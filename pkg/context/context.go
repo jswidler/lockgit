@@ -87,6 +87,14 @@ func FindLockgit(path string) (string, error) {
 	}
 }
 
+func (c Context) RelPath(absPath string) string {
+	path, err := filepath.Rel(c.WorkingPath, absPath)
+	if err != nil {
+		return absPath
+	}
+	return path
+}
+
 func getKey(path string) ([]byte, error) {
 	key, err := ioutil.ReadFile(path)
 	if os.IsNotExist(err) {

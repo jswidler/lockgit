@@ -21,12 +21,8 @@
 package content
 
 import (
-	"bytes"
-	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"io"
-	"os"
 )
 
 // Meta data about a secret
@@ -49,32 +45,7 @@ func (f Filemeta) ShaString() string {
 }
 
 func (f Filemeta) String() string {
-	return fmt.Sprintf("%s\t%s", base64.RawURLEncoding.EncodeToString(f.Sha), f.RelPath)
-}
-
-func (f Filemeta) CompareFileToHash() (bool, error) {
-	h := sha1.New()
-	h.Write(f.Sha[:4])
-
-	err := readIn(f.AbsPath, h)
-	if err != nil {
-		return false, err
-	}
-
-	sha := h.Sum(nil)
-	return bytes.Equal(sha, f.Sha[4:]), nil
-}
-
-func readIn(path string, dst io.Writer) (err error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if _, err := io.Copy(dst, f); err != nil {
-		return err
-	}
-	return nil
+	return fmt.Sprintf("%s\t%s", f.ShaString(), f.RelPath)
 }
 
 /* if you are worried about hash collisions for some reason...
