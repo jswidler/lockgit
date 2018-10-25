@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/mitchellh/go-homedir"
@@ -56,27 +57,28 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.lockgit.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ~/.lockgit.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&noUpdateGitignore, "no-update-gitignore", "", false, "disable updating .gitignore file")
 
 	viper.BindPFlag("noUpdateGitignore", rootCmd.PersistentFlags().Lookup("no-update-gitignore"))
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+	InitConfig(cfgFile)
+}
+
+// initConfig reads in config file and ENV variables if set.
+func InitConfig(file string) {
+	if file != "" {
+		// Use specified file
+		viper.SetConfigFile(file)
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		// Search config in home directory with name ".lockgit" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".lockgit")
+		log.FatalExit(err)
+
+		// Use the .lockgit.yml config file in the home dir
+		viper.SetConfigFile(filepath.Join(home, ".lockgit.yml"))
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

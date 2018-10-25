@@ -31,14 +31,13 @@ import (
 	"strings"
 
 	c "github.com/jswidler/lockgit/pkg/content"
-	"github.com/jswidler/lockgit/pkg/context"
 	"github.com/jswidler/lockgit/pkg/gitignore"
 	"github.com/jswidler/lockgit/pkg/log"
 	u "github.com/jswidler/lockgit/pkg/util"
 	"github.com/pkg/errors"
 )
 
-func openFromVault(ctx context.Context, filemeta c.Filemeta, params Options) error {
+func openFromVault(ctx c.Context, filemeta c.Filemeta, params Options) error {
 	if !params.Force {
 		datafile, err := c.NewDatafile(ctx, filemeta.AbsPath)
 		if err == nil {
@@ -57,8 +56,7 @@ func openFromVault(ctx context.Context, filemeta c.Filemeta, params Options) err
 			return err
 		}
 	}
-
-	// The file does not exist, or force is enabled:
+	// if here, the file does not exist, or force is enabled
 	datafile, err := c.ReadDatafile(ctx, filemeta)
 	if err != nil {
 		return err
@@ -67,16 +65,17 @@ func openFromVault(ctx context.Context, filemeta c.Filemeta, params Options) err
 	if err != nil {
 		return err
 	}
-	_ = os.Mkdir(filepath.Dir(filemeta.AbsPath), 0755)
-	err = ioutil.WriteFile(filemeta.AbsPath, data, os.FileMode(datafile.Perm))
+	absPath := filepath.Join(ctx.ProjectPath, datafile.Path)
+	_ = os.Mkdir(filepath.Dir(absPath), 0755)
+	err = ioutil.WriteFile(absPath, data, os.FileMode(datafile.Perm))
 	if err != nil {
 		return err
 	}
-	log.Verbose(fmt.Sprintf("saved secret to %s", ctx.RelPath(filemeta.AbsPath)))
+	log.Verbose(fmt.Sprintf("saved secret to %s", ctx.RelPath(absPath)))
 	return nil
 }
 
-func deletePlaintextFile(ctx context.Context, filemeta c.Filemeta, params Options) error {
+func deletePlaintextFile(ctx c.Context, filemeta c.Filemeta, params Options) error {
 	exists, err := u.Exists(filemeta.AbsPath)
 	if err != nil {
 		return err
@@ -102,7 +101,7 @@ func deletePlaintextFile(ctx context.Context, filemeta c.Filemeta, params Option
 	return nil
 }
 
-func addFile(ctx context.Context, manifest *c.Manifest, absPath string, params Options) error {
+func addFile(ctx c.Context, manifest *c.Manifest, absPath string, params Options) error {
 	// the location of the file relative to project path
 	relPath, err := filepath.Rel(ctx.ProjectPath, absPath)
 	if err != nil {
@@ -153,7 +152,7 @@ func addFile(ctx context.Context, manifest *c.Manifest, absPath string, params O
 	return nil
 }
 
-func deleteFileFromVault(ctx context.Context, manifest *c.Manifest, absPath string) error {
+func deleteFileFromVault(ctx c.Context, manifest *c.Manifest, absPath string) error {
 	relPath, err := filepath.Rel(ctx.ProjectPath, absPath)
 	if err != nil {
 		return err
@@ -169,9 +168,9 @@ func deleteFileFromVault(ctx context.Context, manifest *c.Manifest, absPath stri
 	return nil
 }
 
-func ensureSameContext(ctx context.Context, files []string) error {
+func ensureSameContext(ctx c.Context, files []string) error {
 	for _, filename := range files {
-		fileCtx, _ := context.FromPath(filename)
+		fileCtx, _ := c.FromPath(filename)
 		if ctx.LockgitPath != fileCtx.LockgitPath {
 			// One of the files is in a different vault from the original
 			if fileCtx.LockgitPath == "" {

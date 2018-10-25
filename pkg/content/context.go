@@ -18,9 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package context
+package content
 
 import (
+	"encoding/base32"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -28,36 +30,18 @@ import (
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/jswidler/lockgit/pkg/util"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 type Context struct {
-	WorkingPath  string // working dir
-	ProjectPath  string // path of the parent for .lockgit
-	LockgitPath  string // path to .lockgit
-	DataPath     string // path to .lockgit/data
-	ManifestPath string // path to .lockgit/manifest
-	KeyPath      string // path to .lockgit/key
-	Key          []byte // key bytes loaded from .lockgit/key if present
-}
+	WorkingPath string   // working dir
+	ProjectPath string   // path of the parent for .lockgit
+	LockgitPath string   // path to .lockgit
+	DataPath    string   // path to .lockgit/data
+	ConfigPath  string   // path to .lockgit/data/lgconfig
+	Config      LgConfig // Config data
 
-type KeyLoadError struct {
-	err error
-}
-
-func (err KeyLoadError) Error() string {
-	return err.Error()
-}
-
-func IsKeyLoadError(err error) bool {
-	if err != nil {
-		switch err.(type) {
-		case KeyLoadError:
-			return true
-		default:
-			return false
-		}
-	}
-	return false
+	Key []byte // key bytes loaded from lgconfig (if key is present)
 }
 
 // Return a Context provided a base to begin traversal from.
@@ -78,19 +62,57 @@ func FromPath(path string) (Context, error) {
 	c.LockgitPath = lockgitPath
 	c.ProjectPath = filepath.Dir(lockgitPath)
 	c.DataPath = filepath.Join(lockgitPath, "data")
-	c.ManifestPath = filepath.Join(lockgitPath, "manifest")
-	c.KeyPath = filepath.Join(lockgitPath, "key")
-	key, err := ioutil.ReadFile(c.KeyPath)
+	c.ConfigPath = filepath.Join(c.LockgitPath, "lgconfig")
+
+	c.Config, err = ReadConfig(c)
 	if os.IsNotExist(err) {
-		return c, KeyLoadError{errors.Errorf("no key found at %s", c.KeyPath)}
-	} else if err != nil {
-		return c, KeyLoadError{errors.Wrapf(err, "error attempting to read key at %s", c.KeyPath)}
-	} else if len(key) != 32 {
-		return c, KeyLoadError{errors.Errorf("key in %s is the wrong size", c.KeyPath)}
+		// TODO: Handle differently in V1 - error if file is missing?
+		// v0.5 -> v0.6+:  For now, assume this file is missing because it was created with an old version of lockgit.
+		// 				  Update the lockgit vault by creating a the config file and moving the key if it exists
+		c.Config = NewLgConfig()
+		c.Config.Write(c.ConfigPath)
+		key, err := readKeyOldV05(c)
+		if err == nil {
+			keyStr := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(key)
+			viper.Set("vaults."+c.Config.Id+".key", keyStr)
+			viper.Set("vaults."+c.Config.Id+".name", c.Config.Name)
+			viper.WriteConfig()
+		}
 	} else {
-		c.Key = key
+		log.FatalPanic(errors.Wrap(err, "could not read .lockgit/lgconfig"))
 	}
-	return c, nil
+
+	c.Key, err = readKey(c)
+	return c, err
+}
+
+func readKey(c Context) ([]byte, error) {
+	keyStr := viper.GetString("vaults." + c.Config.Id + ".key")
+
+	if keyStr == "" {
+		return nil, &KeyLoadError{fmt.Sprintf("no key for '%s' found in %s", c.Config.Name, viper.ConfigFileUsed())}
+	}
+
+	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(keyStr)
+	if err != nil {
+		return nil, &KeyLoadError{fmt.Sprintf("error attempting to read key for '%s' in %s: %s", c.Config.Name, viper.ConfigFileUsed(), err.Error())}
+	} else if len(key) != 32 {
+		return key, &KeyLoadError{fmt.Sprintf("key for '%s' in %s is the wrong size", c.Config.Name, viper.ConfigFileUsed())}
+	}
+	return key, nil
+}
+
+func readKeyOldV05(c Context) ([]byte, error) {
+	keyPath := filepath.Join(c.LockgitPath, "key")
+	key, err := ioutil.ReadFile(keyPath)
+	if os.IsNotExist(err) {
+		return key, &KeyLoadError{fmt.Sprintf("no key found at %s", keyPath)}
+	} else if err != nil {
+		return key, &KeyLoadError{fmt.Sprintf("error attempting to read key at %s: %s", keyPath, err.Error())}
+	} else if len(key) != 32 {
+		return key, &KeyLoadError{fmt.Sprintf("key in %s is the wrong size", keyPath)}
+	}
+	return key, nil
 }
 
 // Find the .lockgit directory given a path.  If there is no .lockgit directory
@@ -107,6 +129,10 @@ func findLockgit(path string) (string, error) {
 			return "", errors.New("no lockgit vault found")
 		}
 	}
+}
+
+func (c Context) ImportManifest() (Manifest, error) {
+	return ImportManifest(c)
 }
 
 func (c Context) RelPath(absPath string) string {

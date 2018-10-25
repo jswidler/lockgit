@@ -26,6 +26,7 @@ Available Commands:
   init        Initialize a lockgit vault
   reveal-key  Reveal the lockgit key for the current repo
   unlock      Set the key for the current vault
+  lock        Delete the key for the current vault
   ls          List the files in the lockgit vault
   add         Add files to the vault
   commit      Commit changes of tracked files to the vault
@@ -65,8 +66,10 @@ First, initialize a new vault in the `myserverconfig` directory:
  
 ```
 $ lockgit init
-Initialized empty lockgit vault in /home/myserverconfig/.lockgit
+Initialized empty lockgit vault 'flattered-gusto' in /home/myserverconfig/.lockgit
 ```
+
+If there are no parameters to init, lockgit will make up a name to refer to the repo.  This can be changed later with `rename`.
 
 ##### Add secrets
 Next, add the secrets to it
@@ -86,16 +89,16 @@ something like this:
 ├── data
 │   ├── uJl28qpmje-cWGDUv3p8iiJgcANTPKdK
 │   └── yocrUblPqDoRaKYnjE6VfQLQo6LrlrHT
-├── key
+├── lgconfig
 └── manifest
 ``` 
 
 ##### Use source conntrol
-You should check the `.lockgit` folder into source control, with the exception of the `key` file.  
+You should check the entire `.lockgit` folder into source control.  
 
-Lockgit can also update `.gitignore` as you use it.  We now have three secrets in
-the `myserverconfig` folder: `.lockgit/key`, `config/tls.key`, and `creds/awscred`.
-All of these files have been added to `.gitignore` to help prevent them from being
+Lockgit can also update `.gitignore` as you use it.  We now have two secrets in
+the `myserverconfig` folder: `config/tls.key`, and `creds/awscred`.
+Both of these files have been added to `.gitignore` to help prevent them from being
 checked in.
 
 ##### Delete and Restore plaintext secrets
@@ -108,11 +111,16 @@ $ lockgit reveal-key
 FA633KF422AXETBBMXUZYNXZDXN4VRKSE4TI4N2KTXYHV6MUAHQA
 ```  
 
-To use this key to recreate the `key` file, use `unlock`
+To use this key to unlock the vault, use `unlock`
 
 ```
 $ lockgit unlock FA633KF422AXETBBMXUZYNXZDXN4VRKSE4TI4N2KTXYHV6MUAHQA
 ```
+
+The key is saved to your home directory in the config file `~/.lockgit.yml` (unless you overrode this location from
+the command line).  You can remove the key from the config file by using `lock`.  Be wary that this will delete your key,
+so if it isn't written down somewhere, you will lose the contents of the vault.
+
 
 ##### Make changes to your secrets
 After you update a secret, lockgit can detect the change.

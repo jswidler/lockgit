@@ -22,18 +22,16 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/jswidler/lockgit/pkg/content"
-	"github.com/jswidler/lockgit/pkg/context"
-	"github.com/jswidler/lockgit/pkg/gitignore"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/jswidler/lockgit/pkg/util"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 type Options struct {
@@ -44,8 +42,8 @@ type Options struct {
 
 // Initialize a lockgit vault in the working directory.  Returns an error if there is already
 // a lockgit vault in the directory.
-func InitVault(params Options) error {
-	lockgitPath := filepath.Join(params.Wd, ".lockgit")
+func InitVault(opts Options) error {
+	lockgitPath := filepath.Join(opts.Wd, ".lockgit")
 	exist, err := util.Exists(lockgitPath)
 	if exist {
 		return fmt.Errorf("Cannot initialize lockgit vault at %s: directory already exists", lockgitPath)
@@ -55,16 +53,17 @@ func InitVault(params Options) error {
 	err = os.Mkdir(lockgitPath, 0755)
 	log.FatalPanic(errors.Wrap(err, "failed to make .lockgit directory"))
 
-	if !params.NoUpdateGitignore {
-		gitignore.Add(params.Wd, ".lockgit/key")
-	}
+	config := content.NewLgConfig()
+	config.Write(filepath.Join(lockgitPath, "lgconfig"))
 
-	key := genKey()
-	keyPath := filepath.Join(lockgitPath, "key")
-	err = ioutil.WriteFile(keyPath, key, 0644)
+	vaultSettings := make(map[string]string)
+	vaultSettings["name"] = config.Name
+	vaultSettings["key"] = keyToString(genKey())
+	viper.Set("vaults."+config.Id, vaultSettings)
+	err = viper.WriteConfig()
 	log.FatalPanic(err)
 
-	fmt.Println("Initialized empty lockgit vault in", lockgitPath)
+	log.Infof("Initialized empty lockgit vault '%s' in %s", config.Name, lockgitPath)
 	return nil
 }
 
@@ -74,13 +73,34 @@ func SetKey(opts Options, keystr string) error {
 	if !opts.Force && ctx.Key != nil {
 		return fmt.Errorf("key already exists, use --force to overwrite")
 	}
-	key, err := keyToBytes(keystr)
+
+	_, err := keyToBytes(keystr)
 	log.FatalExit(err)
 
-	err = ioutil.WriteFile(ctx.KeyPath, key, 0644)
-	log.FatalPanic(err)
+	viper.Set("vaults."+ctx.Config.Id+".key", keystr)
+	err = viper.WriteConfig()
+	log.FatalExit(err)
 
 	log.Info("key saved")
+	return nil
+}
+
+func UnsetKey(opts Options) error {
+	if !opts.Force {
+		return fmt.Errorf("this operation will irrevocably delete the key for this vault and requires --force to proceed")
+	}
+
+	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly: true})
+
+	if ctx.Key == nil {
+		return fmt.Errorf("key is already unset")
+	}
+
+	viper.Set("vaults."+ctx.Config.Id+".key", "")
+	err := viper.WriteConfig()
+	log.FatalExit(err)
+
+	log.Info("key deleted")
 	return nil
 }
 
@@ -119,7 +139,7 @@ func AddToVault(opts Options, files []string) error {
 			return err
 		} else {
 			changes = true
-			log.Info(fmt.Sprintf("added %s to vault", filename))
+			log.Info(fmt.Sprintf("added %s to vault", ctx.RelPath(filename)))
 		}
 	}
 	if changes {
@@ -139,7 +159,7 @@ func RemoveFromVault(opts Options, files []string) {
 		if err != nil {
 			log.LogError(err)
 		} else {
-			log.Info(fmt.Sprintf("removed %s from vault", filename))
+			log.Info(fmt.Sprintf("removed %s from vault", ctx.RelPath(filename)))
 		}
 	}
 	manifest.Export()
@@ -165,7 +185,7 @@ func Commit(opts Options) error {
 				return err
 			} else {
 				changes = true
-				log.Info(fmt.Sprintf("%s updated", filemeta.AbsPath))
+				log.Info(fmt.Sprintf("%s updated", ctx.RelPath(filemeta.AbsPath)))
 			}
 		}
 	}
@@ -227,16 +247,20 @@ type loadcmopts struct {
 	allowEmpty    bool
 }
 
-func loadcm(wd string, opts loadcmopts) (context.Context, content.Manifest) {
-	ctx, err := context.FromPath(wd)
-	if err != nil && (opts.keyRequired || !context.IsKeyLoadError(err)) {
+func loadcm(wd string, opts loadcmopts) (content.Context, content.Manifest) {
+	ctx, err := content.FromPath(wd)
+	if err != nil && (opts.keyRequired || !content.IsKeyLoadError(err)) {
 		log.FatalExit(err)
 	}
 	if opts.ctxOnly {
 		return ctx, content.Manifest{}
 	}
+
 	_ = os.Mkdir(ctx.DataPath, 0755)
-	manifest := content.ImportManifest(ctx)
+
+	manifest, err := ctx.ImportManifest()
+	log.FatalExit(err)
+
 	if !opts.allowEmpty && len(manifest.Files) == 0 {
 		fmt.Println("vault is empty")
 		os.Exit(0)

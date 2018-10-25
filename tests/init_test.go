@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"bufio"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,19 +15,6 @@ func TestInitVaultSuccess(t *testing.T) {
 
 	// Test there is a vault and a key
 	testLockgitAndKeyExists(t, opts.Wd)
-
-	// test the key has been added to gitignore
-	gitignore, _ := os.Open(filepath.Join(opts.Wd, ".gitignore"))
-	reader := bufio.NewReader(gitignore)
-	for {
-		readString, err := reader.ReadString('\n')
-		if readString == ".lockgit/key" {
-			// found it
-			break
-		} else if err != nil {
-			t.Error(".lockgit/key not found in .gitignore")
-		}
-	}
 }
 
 func TestInitVaultFailsIfVaultExists(t *testing.T) {
@@ -71,21 +56,6 @@ func testLockgitAndKeyExists(t *testing.T, testProjectPath string) {
 		t.Error(".lockgit exists but has wrong permissons")
 	}
 
-	// Test there is a keyfile
-	keyPath := filepath.Join(lockgitPath, "key")
-	info, _ = os.Stat(keyPath)
-	if info == nil {
-		t.Error(".lockgit/key not found")
-	} else {
-		if !info.Mode().IsRegular() {
-			t.Error(".lockgit/key exists but is not a regular file")
-		}
-		if info.Mode().Perm() != 0644 {
-			t.Error(".lockgit/key exists but has wrong permissons")
-		}
-		bytes, _ := ioutil.ReadFile(keyPath)
-		if len(bytes) != 32 {
-			t.Error(".lockgit/key is not 32 bytes")
-		}
-	}
+	// TODO: Test there is a key in the config file
+
 }

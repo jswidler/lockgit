@@ -24,14 +24,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/jswidler/lockgit/pkg/context"
 	"github.com/jswidler/lockgit/pkg/log"
 )
 
@@ -45,36 +43,37 @@ func (m Manifest) Export() {
 	log.FatalPanic(err)
 }
 
-func ImportManifest(ctx context.Context) Manifest {
+func ImportManifest(ctx Context) (Manifest, error) {
 	m := Manifest{
 		Files: make([]Filemeta, 0, 32),
-		path:  ctx.ManifestPath,
+		path:  filepath.Join(ctx.LockgitPath, "manifest"),
 	}
-	file, err := os.Open(ctx.ManifestPath)
+	file, err := os.Open(m.path)
 	if os.IsNotExist(err) {
-		return m
+		return m, nil
+	} else if err != nil {
+		return m, &ManifestLoadError{ctx.RelPath(m.path), err.Error()}
 	}
-	log.FatalExit(err)
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		tokens := strings.SplitN(scanner.Text(), "\t", 2)
 		if len(tokens) != 2 {
-			log.FatalExit(fmt.Errorf("%s does not have the expected format", ctx.ManifestPath))
+			return m, &ManifestLoadError{ctx.RelPath(m.path), "wrong format"}
 		}
-
 		sha, err := base64.RawURLEncoding.DecodeString(tokens[0])
 		if err != nil {
-			log.FatalExit(fmt.Errorf("%s does not have the expected format", ctx.ManifestPath))
+			return m, &ManifestLoadError{ctx.RelPath(m.path), "wrong format"}
 		}
 		m.Add(Filemeta{Sha: sha, RelPath: tokens[1], AbsPath: filepath.Join(ctx.ProjectPath, tokens[1])})
 	}
-
 	err = scanner.Err()
-	log.FatalPanic(err)
+	if err != nil {
+		return m, &ManifestLoadError{ctx.RelPath(m.path), err.Error()}
+	}
 
-	return m
+	return m, nil
 }
 
 func (m Manifest) Find(projRelPath string) int {

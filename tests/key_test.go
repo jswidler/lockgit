@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/jswidler/lockgit/pkg/app"
@@ -11,16 +9,26 @@ import (
 const testKey = "X57J6W76UA6HXQ7VZ5KLLMMVYGVHTTGNQS3EJPR6AOQRP2WBZAUQ"
 
 func TestSetKey(t *testing.T) {
-	opts := opts("unlocktest")
+	opts := opts("setkey")
 	setupVault(t, opts)
 
-	keyPath := filepath.Join(opts.Wd, ".lockgit", "key")
-	_ = os.Remove(keyPath)
+	// Delete the original key
+	reloadConfig(opts)
+	opts.Force = true
+	err := app.UnsetKey(opts)
+	if err != nil {
+		t.Errorf("unset key failed %s", err)
+	}
 
-	err := app.SetKey(opts, testKey)
+	// Now try and set the new key
+	opts.Force = false
+	reloadConfig(opts)
+	err = app.SetKey(opts, testKey)
 	if err != nil {
 		t.Errorf("set key failed %s", err)
 	}
+
+	reloadConfig(opts)
 	key := app.GetKey(opts)
 	if key != testKey {
 		t.Error("key was not successfully recalled")
@@ -28,7 +36,7 @@ func TestSetKey(t *testing.T) {
 }
 
 func TestSetKeyFailsIfKeyIsSet(t *testing.T) {
-	opts := opts("unlocktest")
+	opts := opts("setkeyfail")
 	setupVault(t, opts)
 
 	err := app.SetKey(opts, testKey)
@@ -38,7 +46,7 @@ func TestSetKeyFailsIfKeyIsSet(t *testing.T) {
 }
 
 func TestSetKeyOverwritesWithForce(t *testing.T) {
-	opts := opts("unlocktest")
+	opts := opts("setkeyforce")
 	setupVault(t, opts)
 
 	// Check get key does not panic
@@ -49,6 +57,8 @@ func TestSetKeyOverwritesWithForce(t *testing.T) {
 	if err != nil {
 		t.Errorf("set key failed %s", err)
 	}
+
+	reloadConfig(opts)
 	key := app.GetKey(opts)
 	if key != testKey {
 		t.Error("key was not successfully recalled")

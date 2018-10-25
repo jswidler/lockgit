@@ -19,6 +19,10 @@ func Info(message string) {
 	fmt.Println(message)
 }
 
+func Infof(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stdout, format+"\n", a...)
+}
+
 // for now just print it
 func Verbose(message string) {
 	fmt.Println(message)

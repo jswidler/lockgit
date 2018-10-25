@@ -34,7 +34,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jswidler/lockgit/pkg/context"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/pkg/errors"
 )
@@ -46,7 +45,7 @@ type Datafile struct {
 	Perm int
 }
 
-func NewDatafile(ctx context.Context, path string) (Datafile, error) {
+func NewDatafile(ctx Context, path string) (Datafile, error) {
 	d := Datafile{}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -81,14 +80,14 @@ func (d Datafile) Serialize() []byte {
 	return jsondata
 }
 
-func (d Datafile) Write(ctx context.Context, filemeta Filemeta) {
+func (d Datafile) Write(ctx Context, filemeta Filemeta) {
 	path := MakeDatafilePath(ctx, filemeta)
 	ciphertext := encrypt(ctx.Key, compress(d.Serialize()))
 	err := ioutil.WriteFile(path, ciphertext, 0644)
 	log.FatalPanic(err)
 }
 
-func MakeDatafilePath(ctx context.Context, filemeta Filemeta) string {
+func MakeDatafilePath(ctx Context, filemeta Filemeta) string {
 	return filepath.Join(ctx.DataPath, base64.RawURLEncoding.EncodeToString(filemeta.Sha))
 }
 
@@ -115,7 +114,7 @@ func (d Datafile) MatchesHash(hash []byte) bool {
 	return bytes.Equal(sha, hash[4:])
 }
 
-func ReadDatafile(ctx context.Context, filemeta Filemeta) (Datafile, error) {
+func ReadDatafile(ctx Context, filemeta Filemeta) (Datafile, error) {
 	data := Datafile{}
 	ciphertext, err := ioutil.ReadFile(MakeDatafilePath(ctx, filemeta))
 	if err != nil {

@@ -19,6 +19,7 @@ func TestMultipleLockgits(t *testing.T) {
 	setupVault(t, group2Opts)
 	group2file := createFile(group2Opts, "group2file")
 
+	reloadConfig(baseOpts)
 	err := app.AddToVault(baseOpts, basefile)
 	if err != nil {
 		t.Errorf("expected to add basefile to base vault: %s", err)
@@ -29,6 +30,7 @@ func TestMultipleLockgits(t *testing.T) {
 		t.Error("expected to fail to add group1file to base vault")
 	}
 
+	reloadConfig(group1Opts)
 	err = app.AddToVault(group1Opts, group2file)
 	if err == nil {
 		t.Error("expected to fail to add group2file to group1 vault")
@@ -36,10 +38,10 @@ func TestMultipleLockgits(t *testing.T) {
 }
 
 func TestAddLockgitFile(t *testing.T) {
-	opts := opts("lockgitfiltest")
+	opts := opts("lockgitfiletest")
 	setupVault(t, opts)
 
-	keypath := filepath.Join(opts.Wd, ".lockgit", "key")
+	keypath := filepath.Join(opts.Wd, ".lockgit", "ldconfig")
 
 	err := app.AddToVault(opts, []string{keypath})
 	if err == nil {
