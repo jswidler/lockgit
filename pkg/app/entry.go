@@ -71,7 +71,7 @@ func InitVault(params Options) error {
 func SetKey(opts Options, keystr string) error {
 	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly: true})
 
-	if !opts.Force && ctx.KeyLoaded {
+	if !opts.Force && ctx.Key != nil {
 		return fmt.Errorf("key already exists, use --force to overwrite")
 	}
 	key, err := keyToBytes(keystr)
@@ -228,11 +228,11 @@ type loadcmopts struct {
 }
 
 func loadcm(wd string, opts loadcmopts) (context.Context, content.Manifest) {
-	ctx, err := context.FromPath(wd, opts.keyRequired)
-
-	if err != nil {
-		log.FatalExit(errors.Wrap(err, "unable to load lockgit"))
-	} else if opts.ctxOnly {
+	ctx, err := context.FromPath(wd)
+	if err != nil && (opts.keyRequired || !context.IsKeyLoadError(err)) {
+		log.FatalExit(err)
+	}
+	if opts.ctxOnly {
 		return ctx, content.Manifest{}
 	}
 	_ = os.Mkdir(ctx.DataPath, 0755)

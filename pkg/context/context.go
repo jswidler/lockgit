@@ -21,7 +21,6 @@
 package context
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -39,12 +38,31 @@ type Context struct {
 	ManifestPath string // path to .lockgit/manifest
 	KeyPath      string // path to .lockgit/key
 	Key          []byte // key bytes loaded from .lockgit/key if present
-	KeyLoaded    bool   // true if the key was loaded
+}
+
+type KeyLoadError struct {
+	err error
+}
+
+func (err KeyLoadError) Error() string {
+	return err.Error()
+}
+
+func IsKeyLoadError(err error) bool {
+	if err != nil {
+		switch err.(type) {
+		case KeyLoadError:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
 }
 
 // Return a Context provided a base to begin traversal from.
 // The context will be from the first .lockgit directory found
-func FromPath(path string, keyRequired bool) (Context, error) {
+func FromPath(path string) (Context, error) {
 	c := Context{}
 
 	pathabs, err := filepath.Abs(path)
@@ -52,7 +70,7 @@ func FromPath(path string, keyRequired bool) (Context, error) {
 		log.FatalPanic(errors.Wrap(err, "could not make absolute path"))
 	}
 
-	lockgitPath, err := FindLockgit(pathabs)
+	lockgitPath, err := findLockgit(pathabs)
 	if err != nil {
 		return c, err
 	}
@@ -62,11 +80,15 @@ func FromPath(path string, keyRequired bool) (Context, error) {
 	c.DataPath = filepath.Join(lockgitPath, "data")
 	c.ManifestPath = filepath.Join(lockgitPath, "manifest")
 	c.KeyPath = filepath.Join(lockgitPath, "key")
-	key, err := getKey(c.KeyPath)
-	c.Key = key
-	c.KeyLoaded = key != nil
-	if keyRequired {
-		log.FatalExit(err)
+	key, err := ioutil.ReadFile(c.KeyPath)
+	if os.IsNotExist(err) {
+		return c, KeyLoadError{errors.Errorf("no key found at %s", c.KeyPath)}
+	} else if err != nil {
+		return c, KeyLoadError{errors.Wrapf(err, "error attempting to read key at %s", c.KeyPath)}
+	} else if len(key) != 32 {
+		return c, KeyLoadError{errors.Errorf("key in %s is the wrong size", c.KeyPath)}
+	} else {
+		c.Key = key
 	}
 	return c, nil
 }
@@ -74,7 +96,7 @@ func FromPath(path string, keyRequired bool) (Context, error) {
 // Find the .lockgit directory given a path.  If there is no .lockgit directory
 // in the provided path, each parent directory will be searched untill one is found.
 // Returns the path or an error if none is found.
-func FindLockgit(path string) (string, error) {
+func findLockgit(path string) (string, error) {
 	for {
 		lockgitPath := filepath.Join(path, ".lockgit")
 		if exist, _ := util.ExistsDir(lockgitPath); exist {
@@ -93,16 +115,4 @@ func (c Context) RelPath(absPath string) string {
 		return absPath
 	}
 	return path
-}
-
-func getKey(path string) ([]byte, error) {
-	key, err := ioutil.ReadFile(path)
-	if os.IsNotExist(err) {
-		return nil, fmt.Errorf("no key found at %s", path)
-	}
-	log.FatalPanic(err)
-	if len(key) != 32 {
-		log.FatalPanic(fmt.Errorf("key in %s is the wrong size", path))
-	}
-	return key, nil
 }

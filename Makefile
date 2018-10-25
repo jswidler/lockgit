@@ -32,7 +32,8 @@ endif
 
 test:
 	mkdir -p build
-	$(GOTEST) -v ./... -coverpkg='github.com/jswidler/lockgit/pkg/...' -coverprofile=build/c.out | tee build/go-test.out
+	test -z $$(gofmt -l .)
+	bash -c "set -o pipefail && $(GOTEST) -v ./... -coverpkg='github.com/jswidler/lockgit/pkg/...' -coverprofile=build/c.out | tee build/go-test.out"
 
 cover:
 	go tool cover -html=build/c.out -o build/coverage.html

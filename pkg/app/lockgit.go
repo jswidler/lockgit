@@ -171,15 +171,15 @@ func deleteFileFromVault(ctx context.Context, manifest *c.Manifest, absPath stri
 
 func ensureSameContext(ctx context.Context, files []string) error {
 	for _, filename := range files {
-		lockgit, err := context.FindLockgit(filename)
-		if err != nil || ctx.LockgitPath != lockgit {
+		fileCtx, _ := context.FromPath(filename)
+		if ctx.LockgitPath != fileCtx.LockgitPath {
 			// One of the files is in a different vault from the original
-			if lockgit == "" {
+			if fileCtx.LockgitPath == "" {
 				return fmt.Errorf("%s is not in the active vault %s",
 					ctx.RelPath(filename), ctx.RelPath(ctx.LockgitPath))
 			} else {
 				return fmt.Errorf("%s is in vault %s and not in the active vault %s",
-					ctx.RelPath(filename), ctx.RelPath(lockgit), ctx.RelPath(ctx.LockgitPath))
+					ctx.RelPath(filename), ctx.RelPath(fileCtx.LockgitPath), ctx.RelPath(ctx.LockgitPath))
 			}
 		}
 	}
