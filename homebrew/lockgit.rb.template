@@ -2,7 +2,7 @@
 # brew install jswidler/tap/lockgit
 
 # Dev note: Build new version and upload a draft with the artifacts to GitHub release page with:
-# fgo --pkg build --draft $(VERSION)
+# fgo --pkg build build --draft $(VERSION)
 
 require "rbconfig"
 class Lockgit < Formula
