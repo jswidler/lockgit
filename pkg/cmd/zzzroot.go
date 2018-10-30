@@ -18,12 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// File is named zzz so init is run last, and the command list is full and ready to be sorted
+
 package cmd
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/mitchellh/go-homedir"
@@ -54,20 +57,33 @@ func Execute() {
 	}
 }
 
+// This is the order the commands will be sorted in the help output
+var cmdOrder = []string{
+	"init",
+	"set-key", "reveal-key", "delete-key",
+	"add", "rm",
+	"status", "commit",
+	"open", "close",
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	cmds := cmdList(rootCmd.Commands())
+	sort.Sort(cmds)
+
+	cobra.EnableCommandSorting = false
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ~/.lockgit.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&noUpdateGitignore, "no-update-gitignore", "", false, "disable updating .gitignore file")
 
-	viper.BindPFlag("noUpdateGitignore", rootCmd.PersistentFlags().Lookup("no-update-gitignore"))
+	viper.BindPFlag("no-update-gitignore", rootCmd.PersistentFlags().Lookup("no-update-gitignore"))
 }
 
 func initConfig() {
 	InitConfig(cfgFile)
 }
 
-// initConfig reads in config file and ENV variables if set.
+// Reads in config file
 func InitConfig(file string) {
 	if file != "" {
 		// Use specified file
@@ -76,21 +92,52 @@ func InitConfig(file string) {
 		// Find home directory.
 		home, err := homedir.Dir()
 		log.FatalExit(err)
-
 		// Use the .lockgit.yml config file in the home dir
 		viper.SetConfigFile(filepath.Join(home, ".lockgit.yml"))
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	// viper.AutomaticEnv() // read in environment variables that match
 	viper.AllSettings()
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 
 		//fmt.Println("Using config file:", viper.ConfigFileUsed())
 
-		// Not sure why the binding is not working...
-		noUpdateGitignore = viper.GetBool("noUpdateGitignore")
+		noUpdateGitignore = viper.GetBool("no-update-gitignore")
 	}
+}
+
+func mapit(arr []string) map[string]int {
+	out := make(map[string]int)
+	for i, e := range arr {
+		out[e] = i + 1
+	}
+	return out
+}
+
+var orderMap = mapit(cmdOrder)
+
+type cmdList []*cobra.Command
+
+func (c cmdList) Len() int {
+	return len(c)
+}
+
+func (c cmdList) Less(i, j int) bool {
+	iv := orderMap[c[i].Name()]
+	jv := orderMap[c[j].Name()]
+	if iv == 0 && jv == 0 {
+		return c[i].Name() < c[j].Name()
+	} else if iv == 0 {
+		return false
+	} else if jv == 0 {
+		return true
+	}
+	return jv-iv > 0
+}
+
+func (c cmdList) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
 }
 
 var force bool

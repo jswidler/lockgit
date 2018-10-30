@@ -21,33 +21,26 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/jswidler/lockgit/pkg/app"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/spf13/cobra"
 )
 
-// unlockCmd represents the unlock command
-var unlockCmd = &cobra.Command{
-	Use:   "unlock <KEY>",
-	Short: "Set the key for the current vault",
-	Long: `Set the key for the current vault.
+// deleteKeyCmd represents the lock command
+var deleteKeyCmd = &cobra.Command{
+	Use:   "delete-key",
+	Short: "Delete the key for the current vault",
+	Long: `Delete the key for the current vault.
 
-The key for the vault can be displayed using the reveal-key command.`,
+You will not be able to recover the key after running this command.  It requires --force to work.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			fmt.Fprint(os.Stderr, "invalid key\n")
-			os.Exit(1)
-		}
-		err := app.SetKey(app.Options{Wd: wd, Force: force}, args[0])
+		err := app.UnsetKey(app.Options{Wd: wd, Force: force})
 		log.FatalExit(err)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(unlockCmd)
+	rootCmd.AddCommand(deleteKeyCmd)
 
-	addForceFlag(unlockCmd, "allow overwriting of an existing key")
+	addForceFlag(deleteKeyCmd, "force is required for this operation to succeed")
 }

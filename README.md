@@ -24,16 +24,16 @@ Usage:
 
 Available Commands:
   init        Initialize a lockgit vault
+  set-key     Set the key for the current vault
   reveal-key  Reveal the lockgit key for the current repo
-  unlock      Set the key for the current vault
-  lock        Delete the key for the current vault
-  ls          List the files in the lockgit vault
+  delete-key  Delete the key for the current vault
   add         Add files to the vault
-  commit      Commit changes of tracked files to the vault
   rm          Remove files from the vault
+  status      Check if tracked files match the ones in the vault
+  commit      Commit changes of tracked files to the vault
   open        Decrypt and restore secrets in the vault
   close       Delete plaintext secrets
-  status      Check if the secrets present match the ones in the vault
+  ls          List the files in the lockgit vault
   help        Help about any command
 ```
 
@@ -68,8 +68,6 @@ First, initialize a new vault in the `myserverconfig` directory:
 $ lockgit init
 Initialized empty lockgit vault in /home/myserverconfig/.lockgit
 ```
-
-If there are no parameters to init, lockgit will make up a name to refer to the repo.  This can be changed later with `rename`.
 
 ##### Add secrets
 Next, add the secrets to it
@@ -111,15 +109,16 @@ $ lockgit reveal-key
 FA633KF422AXETBBMXUZYNXZDXN4VRKSE4TI4N2KTXYHV6MUAHQA
 ```  
 
-To use this key to unlock the vault, use `unlock`
+To use this key to unlock the vault, use `set-key`
 
 ```
-$ lockgit unlock FA633KF422AXETBBMXUZYNXZDXN4VRKSE4TI4N2KTXYHV6MUAHQA
+$ lockgit set-key FA633KF422AXETBBMXUZYNXZDXN4VRKSE4TI4N2KTXYHV6MUAHQA
 ```
 
-The key is saved to your home directory in the config file `~/.lockgit.yml` (unless you overrode this location from
-the command line).  You can remove the key from the config file by using `lock`.  Be wary that this will delete your key,
-so if it isn't written down somewhere, you will lose the contents of the vault.
+The key is saved to your home directory in the config file `~/.lockgit.yml` (unless you
+overrode this location from the command line).  You can remove the key from the config
+file by using `delete-key`.  Be wary that this will delete your key, so if it isn't written
+down somewhere, you will lose the contents of the vault.
 
 
 ##### Make changes to your secrets
