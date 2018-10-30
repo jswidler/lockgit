@@ -54,6 +54,5 @@ deps:
 	$(GOGET) github.com/nu7hatch/gouuid
 	$(GOGET) github.com/olekukonko/tablewriter
 	$(GOGET) github.com/pkg/errors
-	$(GOGET) github.com/sethvargo/go-diceware/diceware
 	$(GOGET) github.com/spf13/cobra
 	$(GOGET) github.com/spf13/viper

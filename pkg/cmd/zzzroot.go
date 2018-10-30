@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// File is named zzz so init is run last, and the command list is full and ready to be sorted
+// File is named zzz so init() is run last, and the command list is full and ready to be sorted
 
 package cmd
 
@@ -107,10 +107,13 @@ func InitConfig(file string) {
 	}
 }
 
+// Map each element to a negative number such the the first element in the list gets the number furthest from 0 and the
+// last element of the list gets -1.
 func mapit(arr []string) map[string]int {
 	out := make(map[string]int)
+	l := len(arr)
 	for i, e := range arr {
-		out[e] = i + 1
+		out[e] = i - l
 	}
 	return out
 }
@@ -124,16 +127,12 @@ func (c cmdList) Len() int {
 }
 
 func (c cmdList) Less(i, j int) bool {
-	iv := orderMap[c[i].Name()]
-	jv := orderMap[c[j].Name()]
-	if iv == 0 && jv == 0 {
+	score := orderMap[c[i].Name()] - orderMap[c[j].Name()]
+	if score == 0 {
 		return c[i].Name() < c[j].Name()
-	} else if iv == 0 {
-		return false
-	} else if jv == 0 {
-		return true
+	} else {
+		return score < 0
 	}
-	return jv-iv > 0
 }
 
 func (c cmdList) Swap(i, j int) {

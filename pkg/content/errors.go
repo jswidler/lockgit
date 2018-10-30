@@ -37,8 +37,6 @@ func IsKeyLoadError(err error) bool {
 		switch err.(type) {
 		case *KeyLoadError:
 			return true
-		default:
-			return false
 		}
 	}
 	return false
@@ -58,8 +56,6 @@ func IsManifestLoadError(err error) bool {
 		switch err.(type) {
 		case *ManifestLoadError:
 			return true
-		default:
-			return false
 		}
 	}
 	return false
