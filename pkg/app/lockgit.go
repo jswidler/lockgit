@@ -23,7 +23,6 @@ package app
 import (
 	"crypto/rand"
 	"encoding/base32"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -101,18 +100,8 @@ func deletePlaintextFile(ctx c.Context, filemeta c.Filemeta, params Options) err
 	return nil
 }
 
-func addFile(ctx c.Context, manifest *c.Manifest, absPath string, params Options) error {
-	// the location of the file relative to project path
-	relPath, err := filepath.Rel(ctx.ProjectPath, absPath)
-	if err != nil {
-		return err
-	}
-	info, err := os.Stat(absPath)
-	if err != nil {
-		return err
-	} else if !info.Mode().IsRegular() {
-		return fmt.Errorf("%s cannot be added because it is not a regular file", ctx.RelPath(absPath))
-	}
+func addFile(ctx c.Context, manifest *c.Manifest, absPath string, opts Options) error {
+	relPath := ctx.ProjRelPath(absPath)
 	relRoot := strings.Split(relPath, string(os.PathSeparator))[0]
 	if relRoot == ".." {
 		return fmt.Errorf("%s cannot be added because it is not in the project directory %s", ctx.RelPath(absPath), ctx.RelPath(ctx.ProjectPath))
@@ -121,17 +110,13 @@ func addFile(ctx c.Context, manifest *c.Manifest, absPath string, params Options
 	}
 
 	mindx := manifest.Find(relPath)
-	if !params.Force && mindx >= 0 {
+	if !opts.Force && mindx >= 0 {
 		return fmt.Errorf("%s is already in the vault - enable --force or use commit to update instead", ctx.RelPath(absPath))
 	}
 
-	filedata, err := ioutil.ReadFile(absPath)
-	log.FatalPanic(err)
-	datafile := c.Datafile{
-		Ver:  1,
-		Data: base64.RawStdEncoding.EncodeToString(filedata),
-		Path: relPath,
-		Perm: int(info.Mode().Perm()),
+	datafile, err := c.NewDatafile(ctx, absPath)
+	if err != nil {
+		return err
 	}
 	filemeta := c.NewFilemeta(absPath, datafile)
 
@@ -145,7 +130,7 @@ func addFile(ctx c.Context, manifest *c.Manifest, absPath string, params Options
 		manifest.Add(filemeta)
 	}
 
-	if !params.NoUpdateGitignore {
+	if !opts.NoUpdateGitignore {
 		gitignore.Add(ctx.ProjectPath, filemeta.RelPath)
 	}
 

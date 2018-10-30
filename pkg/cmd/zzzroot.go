@@ -61,7 +61,7 @@ func Execute() {
 var cmdOrder = []string{
 	"init",
 	"set-key", "reveal-key", "delete-key",
-	"add", "rm",
+	"add", "mv", "rm",
 	"status", "commit",
 	"open", "close",
 }

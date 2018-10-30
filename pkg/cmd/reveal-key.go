@@ -28,8 +28,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// revealCmd represents the reveal command
-var revealCmd = &cobra.Command{
+// revealKeyCmd represents the reveal-key command
+var revealKeyCmd = &cobra.Command{
 	Use:   "reveal-key",
 	Short: "Reveal the lockgit key for the current repo",
 
@@ -40,5 +40,5 @@ var revealCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(revealCmd)
+	rootCmd.AddCommand(revealKeyCmd)
 }

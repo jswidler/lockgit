@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// setKeyCmd represents the unlock command
+// setKeyCmd represents the set-key command
 var setKeyCmd = &cobra.Command{
 	Use:   "set-key <KEY>",
 	Short: "Set the key for the current vault",

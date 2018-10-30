@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// revealCmd represents the reveal command
+// statusCmd represents the status command
 var statusCmd = &cobra.Command{
 	Use:     "status",
 	Short:   "Check if tracked files match the ones in the vault",

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// deleteKeyCmd represents the lock command
+// deleteKeyCmd represents the delete-key command
 var deleteKeyCmd = &cobra.Command{
 	Use:   "delete-key",
 	Short: "Delete the key for the current vault",

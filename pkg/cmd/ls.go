@@ -28,7 +28,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// revealCmd represents the reveal command
+// lsCmd represents the ls command
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List the files in the lockgit vault",

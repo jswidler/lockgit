@@ -149,3 +149,9 @@ func (c Context) RelPath(absPath string) string {
 	}
 	return path
 }
+
+func (c Context) ProjRelPath(absPath string) string {
+	relPath, err := filepath.Rel(c.ProjectPath, absPath)
+	log.FatalPanic(err)
+	return relPath
+}

@@ -45,16 +45,9 @@ type Datafile struct {
 	Perm int
 }
 
-func NewDatafile(ctx Context, path string) (Datafile, error) {
+func NewDatafile(ctx Context, absPath string) (Datafile, error) {
 	d := Datafile{}
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return d, err
-	}
-	relPath, err := filepath.Rel(ctx.ProjectPath, absPath)
-	if err != nil {
-		return d, err
-	}
+	relPath := ctx.ProjRelPath(absPath)
 	info, err := os.Stat(absPath)
 	if err != nil {
 		return d, err
