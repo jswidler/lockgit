@@ -57,13 +57,13 @@ func InitVault(opts Options) error {
 	config.Write(filepath.Join(lockgitPath, "lgconfig"))
 
 	vaultSettings := make(map[string]string)
-	vaultSettings["name"] = config.Name
 	vaultSettings["key"] = keyToString(genKey())
+	vaultSettings["path"] = opts.Wd
 	viper.Set("vaults."+config.Id, vaultSettings)
 	err = viper.WriteConfig()
 	log.FatalPanic(err)
 
-	log.Infof("Initialized empty lockgit vault '%s' in %s", config.Name, lockgitPath)
+	log.Infof("Initialized empty lockgit vault in %s", lockgitPath)
 	return nil
 }
 

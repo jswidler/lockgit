@@ -75,11 +75,18 @@ func FromPath(path string) (Context, error) {
 		if err == nil {
 			keyStr := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(key)
 			viper.Set("vaults."+c.Config.Id+".key", keyStr)
-			viper.Set("vaults."+c.Config.Id+".name", c.Config.Name)
+			viper.Set("vaults."+c.Config.Id+".path", c.ProjectPath)
 			viper.WriteConfig()
 		}
-	} else {
+	} else if err != nil {
 		log.FatalPanic(errors.Wrap(err, "could not read .lockgit/lgconfig"))
+	}
+
+	// Update path in config file if it has changed
+	pathKey := "vaults." + c.Config.Id + ".path"
+	if c.ProjectPath != viper.GetString(pathKey) {
+		viper.Set(pathKey, c.ProjectPath)
+		viper.WriteConfig()
 	}
 
 	c.Key, err = readKey(c)
@@ -90,14 +97,14 @@ func readKey(c Context) ([]byte, error) {
 	keyStr := viper.GetString("vaults." + c.Config.Id + ".key")
 
 	if keyStr == "" {
-		return nil, &KeyLoadError{fmt.Sprintf("no key for '%s' found in %s", c.Config.Name, viper.ConfigFileUsed())}
+		return nil, &KeyLoadError{fmt.Sprintf("no key for %s found in %s", c.ProjectPath, viper.ConfigFileUsed())}
 	}
 
 	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(keyStr)
 	if err != nil {
-		return nil, &KeyLoadError{fmt.Sprintf("error attempting to read key for '%s' in %s: %s", c.Config.Name, viper.ConfigFileUsed(), err.Error())}
+		return nil, &KeyLoadError{fmt.Sprintf("error attempting to read key for %s in %s: %s", c.ProjectPath, viper.ConfigFileUsed(), err.Error())}
 	} else if len(key) != 32 {
-		return key, &KeyLoadError{fmt.Sprintf("key for '%s' in %s is the wrong size", c.Config.Name, viper.ConfigFileUsed())}
+		return key, &KeyLoadError{fmt.Sprintf("key for %s in %s is the wrong size", c.ProjectPath, viper.ConfigFileUsed())}
 	}
 	return key, nil
 }

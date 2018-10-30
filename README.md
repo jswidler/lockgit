@@ -66,7 +66,7 @@ First, initialize a new vault in the `myserverconfig` directory:
  
 ```
 $ lockgit init
-Initialized empty lockgit vault 'flattered-gusto' in /home/myserverconfig/.lockgit
+Initialized empty lockgit vault in /home/myserverconfig/.lockgit
 ```
 
 If there are no parameters to init, lockgit will make up a name to refer to the repo.  This can be changed later with `rename`.

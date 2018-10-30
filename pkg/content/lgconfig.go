@@ -23,30 +23,23 @@ package content
 import (
 	"encoding/json"
 	"io/ioutil"
-	"strings"
 
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pkg/errors"
-	"github.com/sethvargo/go-diceware/diceware"
 )
 
 type LgConfig struct {
-	Ver  int
-	Id   string
-	Name string
+	Ver int
+	Id  string
 }
 
 func NewLgConfig() LgConfig {
 	id, err := uuid.NewV4()
 	log.FatalPanic(err)
-	tokens, err := diceware.Generate(2)
-	log.FatalPanic(err)
-	name := strings.Join(tokens, "-")
 	return LgConfig{
-		Ver:  1,
-		Id:   id.String(),
-		Name: name,
+		Ver: 1,
+		Id:  id.String(),
 	}
 }
 
@@ -71,8 +64,6 @@ func ReadConfig(ctx Context) (LgConfig, error) {
 	// Validate config expectations
 	if config.Id == "" {
 		return config, errors.New("no vault id found in ldconfig")
-	} else if config.Name == "" {
-		return config, errors.New("no vault name found in ldconfig")
 	}
 
 	return config, nil
