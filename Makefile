@@ -9,6 +9,8 @@ BINARY_NAME  := lockgit
 VERSION      ?= snapshot
 GHRFLAGS     ?=
 
+.PHONY: all test build clean
+
 all: test build
 coverage: test cover
 
