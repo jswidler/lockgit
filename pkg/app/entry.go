@@ -63,7 +63,7 @@ func InitVault(opts Options) error {
 	err = viper.WriteConfig()
 	log.FatalPanic(err)
 
-	log.Infof("Initialized empty lockgit vault in %s", lockgitPath)
+	log.Infof("Initialized empty lockgit vault in %s\nKey added to %s", lockgitPath, viper.ConfigFileUsed())
 	return nil
 }
 
