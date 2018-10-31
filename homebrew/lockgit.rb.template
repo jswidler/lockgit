@@ -48,6 +48,8 @@ class Lockgit < Formula
 
   def install
     bin.install "lockgit"
+    system "#{bin}/lockgit", "completion", "-o", "completions.bash"
+    bash_completion.install "completions.bash" => "lockgit"
   end
 
   test do
