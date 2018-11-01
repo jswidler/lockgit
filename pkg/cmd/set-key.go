@@ -31,11 +31,13 @@ import (
 
 // setKeyCmd represents the set-key command
 var setKeyCmd = &cobra.Command{
-	Use:   "set-key <KEY>",
+	Use:   "set-key <key>",
 	Short: "Set the key for the current vault",
 	Long: `Set the key for the current vault.
 
 The key for the vault can be displayed using the reveal-key command.`,
+
+	Args: cobraNamedPositionalArgs("key"),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Fprint(os.Stderr, "invalid key\n")

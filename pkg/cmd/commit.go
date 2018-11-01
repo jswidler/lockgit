@@ -31,6 +31,7 @@ var commitCmd = &cobra.Command{
 	Use:   "commit",
 	Short: "Commit changes of tracked files to the vault",
 
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := app.Commit(app.Options{Wd: wd})
 		log.FatalExit(err)

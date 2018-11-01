@@ -31,6 +31,7 @@ var closeCmd = &cobra.Command{
 	Short:   "Delete plaintext secrets",
 	Aliases: []string{"clean"},
 
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		app.CloseVault(app.Options{Wd: wd, Force: force})
 	},

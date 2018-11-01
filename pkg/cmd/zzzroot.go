@@ -27,9 +27,11 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -105,6 +107,23 @@ func InitConfig(file string) {
 		//fmt.Println("Using config file:", viper.ConfigFileUsed())
 
 		noUpdateGitignore = viper.GetBool("no-update-gitignore")
+	}
+}
+
+// Return a validator for named positional arguments from a command-line
+func cobraNamedPositionalArgs(argNames ...string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) > len(argNames) {
+			return errors.Errorf("too many arguments: got %d, expected %d", len(args), len(argNames))
+		} else if len(args) < len(argNames) {
+			var s string
+			if len(args)+1 != len(argNames) {
+				s = "s"
+			}
+			return errors.Errorf("missing required argument%s: %s", s, strings.Join(argNames[len(args):], ", "))
+		} else {
+			return nil
+		}
 	}
 }
 

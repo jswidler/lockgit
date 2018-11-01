@@ -31,6 +31,7 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a lockgit vault",
 
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := app.InitVault(app.Options{
 			Wd:                wd,

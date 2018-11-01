@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"github.com/jswidler/lockgit/pkg/app"
-
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +31,7 @@ var statusCmd = &cobra.Command{
 	Short:   "Check if tracked files match the ones in the vault",
 	Aliases: []string{"info"},
 
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		app.Status(app.Options{Wd: wd})
 	},
