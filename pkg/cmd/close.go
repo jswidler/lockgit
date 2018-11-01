@@ -39,5 +39,5 @@ var closeCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(closeCmd)
-	addForceFlag(closeCmd, "delete files even if they have changed")
+	addForceFlag(closeCmd, "delete files even if they have unsaved changes")
 }

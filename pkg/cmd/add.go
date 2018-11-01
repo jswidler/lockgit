@@ -41,5 +41,5 @@ var addCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(addCmd)
 
-	addForceFlag(addCmd, "allow overwriting of an existing secret")
+	addForceFlag(addCmd, "allow overwriting of existing files in the vault")
 }
