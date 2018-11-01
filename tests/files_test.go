@@ -100,7 +100,7 @@ func TestUpdateFile(t *testing.T) {
 
 	file := filepath.Join(opts.Wd, "filea")
 	_ = ioutil.WriteFile(file, []byte(data1), 0644)
-	err := app.AddToVault(opts, []string{file})
+	err := app.AddToVault(opts, []string{"filea"})
 	if err != nil {
 		t.Fatalf("failed to add test file to vault %s", err)
 	}
@@ -111,6 +111,21 @@ func TestUpdateFile(t *testing.T) {
 	if err == nil {
 		t.Fatal("should have failed to add changed test file to vault")
 	}
+	app.OpenVault(opts)
+	bytes, _ := ioutil.ReadFile(file)
+	if string(bytes) != data2 {
+		t.Fatal("open should not have changed the file without force")
+	}
+
+	opts.Force = true
+	app.OpenVault(opts)
+	bytes, _ = ioutil.ReadFile(file)
+	if string(bytes) != data1 {
+		t.Fatal("open should have changed the file with force")
+	}
+
+	opts.Force = false
+	_ = ioutil.WriteFile(file, []byte(data2), 0644)
 
 	err = app.Commit(opts)
 	if err != nil {
@@ -125,7 +140,7 @@ func TestUpdateFile(t *testing.T) {
 
 	app.OpenVault(opts)
 
-	bytes, _ := ioutil.ReadFile(file)
+	bytes, _ = ioutil.ReadFile(file)
 	if string(bytes) != data2 {
 		t.Errorf("the file was not updated with the expected data")
 	}

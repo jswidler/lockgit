@@ -76,7 +76,7 @@ var cmdOrder = []string{
 	"add", "mv", "rm",
 	"status", "commit",
 	"open", "close",
-	"ls",
+	"ls", "globs",
 }
 
 func init() {

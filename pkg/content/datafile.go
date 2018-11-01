@@ -48,11 +48,11 @@ type Datafile struct {
 func NewDatafile(ctx Context, absPath string) (Datafile, error) {
 	d := Datafile{}
 	relPath := ctx.ProjRelPath(absPath)
-	info, err := os.Stat(absPath)
+	info, err := os.Lstat(absPath)
 	if err != nil {
 		return d, err
 	} else if !info.Mode().IsRegular() {
-		return d, errors.New("is not a regular file")
+		return d, errors.Errorf("%s is not a regular file", ctx.ProjRelPath(absPath))
 	}
 	filedata, err := ioutil.ReadFile(absPath)
 	if err != nil {

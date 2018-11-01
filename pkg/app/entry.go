@@ -26,7 +26,9 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/bmatcuk/doublestar"
 	"github.com/jswidler/lockgit/pkg/content"
+	"github.com/jswidler/lockgit/pkg/gitignore"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/jswidler/lockgit/pkg/util"
 	"github.com/olekukonko/tablewriter"
@@ -110,7 +112,7 @@ func GetKey(opts Options) string {
 }
 
 func Ls(opts Options) []string {
-	_, manifest := loadcm(opts.Wd, loadcmopts{allowEmpty: true})
+	_, manifest := loadcm(opts.Wd, loadcmopts{})
 	out := make([]string, 0, 32)
 	for _, filemeta := range manifest.Files {
 		out = append(out, filemeta.RelPath)
@@ -118,51 +120,115 @@ func Ls(opts Options) []string {
 	return out
 }
 
-func AddToVault(opts Options, files []string) error {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, allowEmpty: true})
+func LsGlobs(opts Options) []string {
+	ctx, _ := loadcm(opts.Wd, loadcmopts{ctxOnly: true})
+	out := make([]string, 0, 32)
+	for _, pattern := range ctx.Config.Patterns {
+		out = append(out, pattern)
+	}
+	return out
+}
+
+func AddToVault(opts Options, patterns []string) error {
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true})
 
 	// map inputs to absolute paths
-	pathsToAbs(&files)
+	pathsToAbs(ctx.WorkingPath, &patterns)
 
-	err := ensureSameContext(ctx, files)
+	// make sure all the paths are inside the vault before we add them
+	err := ensureSameContext(ctx, patterns)
 	if err != nil {
 		return errors.Wrap(err, "failed to add")
 	}
 
-	changes := false
-	for _, filename := range files {
-		err := addFile(ctx, &manifest, filename, opts)
+	configChange, manifestChange := false, false
+	defer func() { saveChanges(ctx, manifest, manifestChange, configChange) }()
+
+	hadError := false
+	for _, pattern := range patterns {
+		// expand each input to one or more filesΩ
+		rtype, files, pattern, err := util.GetFiles(pattern)
 		if err != nil {
-			if changes {
-				manifest.Export()
-			}
 			return err
-		} else {
-			changes = true
-			log.Info(fmt.Sprintf("added %s to vault", ctx.RelPath(filename)))
+		}
+		if len(files) == 0 {
+			log.LogError(errors.Errorf("cannot add %s: no files match", ctx.ProjRelPath(pattern)))
+			hadError = true
+			continue
+		}
+
+		relGlob := ctx.ProjRelPath(pattern)
+		if !opts.NoUpdateGitignore {
+			gitignore.Add(ctx.ProjectPath, relGlob)
+		}
+
+		if rtype == util.Glob {
+			if added := ctx.Config.AddPattern(relGlob); added {
+				defer log.Info(fmt.Sprintf("added glob pattern '%s' to vault", relGlob))
+				configChange = true
+			}
+		}
+
+		for _, filename := range files {
+			err := addFile(ctx, &manifest, filename, opts)
+			if err != nil {
+				log.LogError(err)
+				hadError = true
+			} else {
+				manifestChange = true
+				log.Info(fmt.Sprintf("added file '%s' to vault", ctx.RelPath(filename)))
+			}
 		}
 	}
-	if changes {
-		manifest.Export()
+
+	if hadError {
+		return errors.New("not all files were added successfully - set output for details")
 	}
+
 	return nil
 }
 
-func RemoveFromVault(opts Options, files []string) {
+func RemoveFromVault(opts Options, patterns []string) {
 	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true})
 
-	// map inputs to absolute paths
-	pathsToAbs(&files)
+	configChange, manifestChange := false, false
+	defer func() { saveChanges(ctx, manifest, manifestChange, configChange) }()
 
-	for _, filename := range files {
-		err := deleteFileFromVault(ctx, &manifest, filename)
-		if err != nil {
-			log.LogError(err)
-		} else {
-			log.Info(fmt.Sprintf("removed %s from vault", ctx.RelPath(filename)))
+	// See if any input is an exact glob match.  Remove it from the config if so
+	for _, input := range patterns {
+		if removed := ctx.Config.RemovePattern(input); removed {
+			defer log.Infof("removed glob pattern '%s' from vault", input)
+			configChange = true
 		}
 	}
-	manifest.Export()
+
+	// map inputs to absolute paths
+	pathsToAbs(ctx.WorkingPath, &patterns)
+
+	for _, pattern := range patterns {
+		// Cannot iterate over the files since we are going to remove from it
+		for i, cur, l := 0, 0, len(manifest.Files); i < l; i++ {
+			file := manifest.Files[cur]
+			if pattern == file.AbsPath {
+				deleteFileHelper(ctx, &manifest, file)
+				manifestChange = true
+			} else if match, _ := doublestar.Match(pattern, file.AbsPath); match {
+				deleteFileHelper(ctx, &manifest, file)
+				manifestChange = true
+			} else {
+				cur++
+			}
+		}
+	}
+}
+
+func deleteFileHelper(ctx content.Context, manifest *content.Manifest, file content.Filemeta) {
+	err := deleteFileFromVault(ctx, manifest, file.AbsPath)
+	if err != nil {
+		log.LogError(err)
+	} else {
+		log.Info(fmt.Sprintf("removed file '%s' from vault", ctx.RelPath(file.AbsPath)))
+	}
 }
 
 func Commit(opts Options) error {
@@ -198,10 +264,27 @@ func Commit(opts Options) error {
 }
 
 func Status(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{filesRequired: true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{})
+
+	// Collect all the files which are tracked by patterns
+	patternMatched := make([]string, 0, 64)
+	if len(ctx.Config.Patterns) > 0 {
+		for _, pattern := range ctx.Config.Patterns {
+			absPattern := filepath.Join(ctx.ProjectPath, pattern)
+
+			_, files, _, err := util.GetFiles(absPattern)
+			log.FatalPanic(err)
+			patternMatched = append(patternMatched, files...)
+		}
+	}
+
+	if len(manifest.Files) == 0 && len(patternMatched) == 0 {
+		log.Info("vault is empty")
+		return
+	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"file", "updated", "hash"})
+	table.SetHeader([]string{"file", "updated", "pattern", "hash"})
 	table.SetBorder(false)
 
 	for _, filemeta := range manifest.Files {
@@ -216,14 +299,32 @@ func Status(opts Options) {
 			updated = strconv.FormatBool(!datafile.MatchesHash(filemeta.Sha))
 		}
 
-		table.Append([]string{filemeta.RelPath, updated, filemeta.ShaString()})
+		patternMatched = util.Filter(patternMatched, func(path string) bool {
+			return path != filemeta.AbsPath
+		})
+
+		table.Append([]string{
+			filemeta.RelPath,
+			updated,
+			firstMatchedPattern(datafile.Path, ctx.Config.Patterns),
+			filemeta.ShaString(),
+		})
+	}
+
+	for _, notCommited := range patternMatched {
+		table.Append([]string{
+			ctx.ProjRelPath(notCommited),
+			"new file",
+			firstMatchedPattern(ctx.ProjRelPath(notCommited), ctx.Config.Patterns),
+			"",
+		})
 	}
 
 	table.Render()
 }
 
 func OpenVault(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, filesRequired: true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, notEmpty: true})
 	for _, filemeta := range manifest.Files {
 		if err := openFromVault(ctx, filemeta, opts); err != nil {
 			log.LogError(errors.Wrapf(err, "error extracting secret"))
@@ -232,7 +333,7 @@ func OpenVault(opts Options) {
 }
 
 func CloseVault(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, filesRequired: true})
+	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, notEmpty: true})
 	for _, filemeta := range manifest.Files {
 		if err := deletePlaintextFile(ctx, filemeta, opts); err != nil {
 			log.LogError(err)
@@ -241,10 +342,9 @@ func CloseVault(opts Options) {
 }
 
 type loadcmopts struct {
-	ctxOnly       bool
-	keyRequired   bool
-	filesRequired bool
-	allowEmpty    bool
+	ctxOnly     bool
+	keyRequired bool
+	notEmpty    bool
 }
 
 func loadcm(wd string, opts loadcmopts) (content.Context, content.Manifest) {
@@ -261,20 +361,39 @@ func loadcm(wd string, opts loadcmopts) (content.Context, content.Manifest) {
 	manifest, err := ctx.ImportManifest()
 	log.FatalExit(err)
 
-	if !opts.allowEmpty && len(manifest.Files) == 0 {
+	if opts.notEmpty && len(manifest.Files) == 0 {
 		fmt.Println("vault is empty")
 		os.Exit(0)
 	}
 	return ctx, manifest
 }
 
-func pathsToAbs(files *[]string) {
+func pathsToAbs(basepath string, files *[]string) {
 	for i, file := range *files {
-
-		path, err := filepath.Abs(file)
-		if err != nil {
-			log.FatalPanic(errors.Wrapf(err, "cannot make absolute path from %s", file))
+		if filepath.IsAbs(file) {
+			(*files)[i] = filepath.Clean(file)
+		} else {
+			(*files)[i] = filepath.Join(basepath, file)
 		}
-		(*files)[i] = path
+	}
+}
+
+func firstMatchedPattern(path string, patterns []string) string {
+	for _, pattern := range patterns {
+		match, err := doublestar.Match(pattern, path)
+		log.FatalPanic(err)
+		if match {
+			return pattern
+		}
+	}
+	return ""
+}
+
+func saveChanges(ctx content.Context, manifest content.Manifest, manifestChanges, configChanges bool) {
+	if manifestChanges {
+		manifest.Export()
+	}
+	if configChanges {
+		ctx.Config.Write(ctx.ConfigPath)
 	}
 }

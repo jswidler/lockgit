@@ -23,6 +23,7 @@ package content
 import (
 	"encoding/json"
 	"io/ioutil"
+	"sort"
 
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/nu7hatch/gouuid"
@@ -30,17 +31,49 @@ import (
 )
 
 type LgConfig struct {
-	Ver int
-	Id  string
+	Ver      int
+	Id       string
+	Patterns []string
 }
 
 func NewLgConfig() LgConfig {
 	id, err := uuid.NewV4()
 	log.FatalPanic(err)
 	return LgConfig{
-		Ver: 1,
-		Id:  id.String(),
+		Ver:      1,
+		Id:       id.String(),
+		Patterns: nil,
 	}
+}
+
+func (c *LgConfig) AddPattern(pattern string) bool {
+	if c.Patterns == nil {
+		c.Patterns = []string{pattern}
+		return true
+	}
+	if c.FindPattern(pattern) < 0 {
+		c.Patterns = append(c.Patterns, pattern)
+		sort.Strings(c.Patterns)
+		return true
+	}
+	return false
+}
+
+func (c *LgConfig) RemovePattern(pattern string) bool {
+	i := c.FindPattern(pattern)
+	if i >= 0 {
+		c.Patterns = append(c.Patterns[:i], c.Patterns[i+1:]...)
+		return true
+	}
+	return false
+}
+
+func (c LgConfig) FindPattern(path string) int {
+	i := sort.Search(len(c.Patterns), func(i int) bool { return c.Patterns[i] >= path })
+	if i < len(c.Patterns) && c.Patterns[i] == path {
+		return i
+	}
+	return -1
 }
 
 func (config LgConfig) Write(path string) {

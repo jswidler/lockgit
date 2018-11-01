@@ -30,7 +30,6 @@ import (
 	"strings"
 
 	c "github.com/jswidler/lockgit/pkg/content"
-	"github.com/jswidler/lockgit/pkg/gitignore"
 	"github.com/jswidler/lockgit/pkg/log"
 	u "github.com/jswidler/lockgit/pkg/util"
 	"github.com/pkg/errors"
@@ -128,10 +127,6 @@ func addFile(ctx c.Context, manifest *c.Manifest, absPath string, opts Options) 
 		manifest.Files[mindx] = filemeta
 	} else {
 		manifest.Add(filemeta)
-	}
-
-	if !opts.NoUpdateGitignore {
-		gitignore.Add(ctx.ProjectPath, filemeta.RelPath)
 	}
 
 	return nil

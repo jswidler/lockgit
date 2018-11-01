@@ -27,8 +27,14 @@ import (
 
 // rmCmd represents the rm command
 var rmCmd = &cobra.Command{
-	Use:     "rm <file> ...",
-	Short:   "Remove files from the vault",
+	Use:   "rm <file|glob> ...",
+	Short: "Remove files and globs from the vault",
+	Long: `Remove files and globs from the vault
+
+For each input, if it matches a previously saved glob pattern exactly, that pattern and all files which match it will be removed from the vault.  Otherwise, if the input matches a file in the vault exactly, that file will be removed from the vault.
+
+` + globHelp,
+
 	Aliases: []string{"remove"},
 
 	Args: cobra.MinimumNArgs(1),

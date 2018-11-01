@@ -51,6 +51,7 @@ run:
 
 deps:
 	$(GOGET) github.com/jstemmer/go-junit-report
+	$(GOGET) github.com/bmatcuk/doublestar
 	$(GOGET) github.com/mitchellh/gox
 	$(GOGET) github.com/mitchellh/go-homedir
 	$(GOGET) github.com/nu7hatch/gouuid

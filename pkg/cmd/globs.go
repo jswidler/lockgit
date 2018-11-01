@@ -21,40 +21,45 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/jswidler/lockgit/pkg/app"
-	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/spf13/cobra"
 )
 
-// addCmd represents the add command
-var addCmd = &cobra.Command{
-	Use:   "add <file|glob> ...",
-	Short: "Add files to the vault",
-	Long: `Add files to the vault, either individually or with a glob pattern.
+// globsCmd represents the globs command
+var globsCmd = &cobra.Command{
+	Use:   "globs",
+	Short: "List all saved glob patterns",
+	Long:  "List all saved glob patterns.\n\n" + globHelp,
 
-For each input, if it matches a file exactly, only that single will be added to the vault.  If the input matches a
-directory exactly, all files of that directory and subdirectories will be added to the vault, and the glob pattern 
-"<input>/**" will be added to the vault.  Otherwise, the input will be interpreted as a glob pattern.
+	Aliases: []string{"glob"},
 
-Files and glob patterns added to the vault can be removed with the rm command.
-
-` + globHelp,
-
-	Example: `  Add a single file called credentials in the current directory:
-  lockgit add credentials
-
-  Add all .key files in the src directory and its subfolders:
-  lockgit add 'src/**/*.key'`,
-
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := app.AddToVault(cliFlags(), args)
-		log.FatalExit(err)
+		files := app.LsGlobs(cliFlags())
+		for _, f := range files {
+			fmt.Println(f)
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(addCmd)
-
-	addForceFlag(addCmd, "allow overwriting of existing files in the vault")
+	rootCmd.AddCommand(globsCmd)
 }
+
+const globHelp = `Glob patterns supported are like those found in a .gitignore file.  The following special terms are supported:
+
+  *           matches any sequence of non-path-separators
+  **          matches any sequence of characters, including path separator
+  ?           matches any single non-path-separator character
+  [class]     matches any single non-path-separator character against a class of characters (see below) 
+  {alt1,...}  matches a sequence of characters if one of the comma-separated alternatives matches
+
+Character classes support the following:
+
+  [abc]       matches any single character within the set
+  [a-z]       matches any single character in the range
+  [^class]    matches any single character which does not match the class
+
+Note: It is a good idea to surround glob patterns with quotes to prevent shell wildcard expansion.`
