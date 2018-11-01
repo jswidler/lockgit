@@ -34,7 +34,7 @@ var lsCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		files := app.Ls(app.Options{Wd: wd})
+		files := app.Ls(cliFlags())
 		for _, f := range files {
 			fmt.Println(f)
 		}

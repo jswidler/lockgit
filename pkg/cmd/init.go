@@ -33,10 +33,7 @@ var initCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := app.InitVault(app.Options{
-			Wd:                wd,
-			NoUpdateGitignore: noUpdateGitignore,
-		})
+		err := app.InitVault(cliFlags())
 		log.FatalExit(err)
 	},
 }

@@ -33,7 +33,7 @@ var statusCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Status(app.Options{Wd: wd})
+		app.Status(cliFlags())
 	},
 }
 

@@ -33,11 +33,7 @@ var addCmd = &cobra.Command{
 
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		err := app.AddToVault(app.Options{
-			Wd:                wd,
-			NoUpdateGitignore: noUpdateGitignore,
-			Force:             force,
-		}, args)
+		err := app.AddToVault(cliFlags(), args)
 		log.FatalExit(err)
 	},
 }

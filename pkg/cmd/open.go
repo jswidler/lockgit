@@ -32,7 +32,7 @@ var openCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		app.OpenVault(app.Options{Wd: wd, Force: force})
+		app.OpenVault(cliFlags())
 	},
 }
 

@@ -29,6 +29,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jswidler/lockgit/pkg/app"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -39,6 +40,15 @@ import (
 var cfgFile string
 var noUpdateGitignore bool
 var wd string
+var force bool
+
+func cliFlags() app.Options {
+	return app.Options{
+		Wd:                wd,
+		NoUpdateGitignore: noUpdateGitignore,
+		Force:             force,
+	}
+}
 
 var rootCmd = &cobra.Command{
 	Use:   "lockgit",
@@ -110,7 +120,7 @@ func InitConfig(file string) {
 	}
 }
 
-// Return a validator for named positional arguments from a command-line
+// Return a validator for named positional arguments from the command-line
 func cobraNamedPositionalArgs(argNames ...string) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) > len(argNames) {
@@ -158,8 +168,6 @@ func (c cmdList) Less(i, j int) bool {
 func (c cmdList) Swap(i, j int) {
 	c[i], c[j] = c[j], c[i]
 }
-
-var force bool
 
 func addForceFlag(cmd *cobra.Command, msg string) {
 	cmd.Flags().BoolVarP(&force, "force", "f", false, msg)

@@ -33,7 +33,7 @@ var commitCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := app.Commit(app.Options{Wd: wd})
+		err := app.Commit(cliFlags())
 		log.FatalExit(err)
 	},
 }

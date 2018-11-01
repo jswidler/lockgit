@@ -36,7 +36,7 @@ You will not be able to recover the key after running this command.  It requires
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := app.UnsetKey(app.Options{Wd: wd, Force: force})
+		err := app.UnsetKey(cliFlags())
 		log.FatalExit(err)
 	},
 }

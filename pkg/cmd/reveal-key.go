@@ -34,7 +34,7 @@ var revealKeyCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		key := app.GetKey(app.Options{Wd: wd})
+		key := app.GetKey(cliFlags())
 		fmt.Println(key)
 	},
 }

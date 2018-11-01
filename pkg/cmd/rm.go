@@ -33,7 +33,7 @@ var rmCmd = &cobra.Command{
 
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		app.RemoveFromVault(app.Options{Wd: wd}, args)
+		app.RemoveFromVault(cliFlags(), args)
 	},
 }
 
