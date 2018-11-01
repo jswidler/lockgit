@@ -33,6 +33,8 @@ var deleteKeyCmd = &cobra.Command{
 	Long: `Delete the key for the current vault.
 
 You will not be able to recover the key after running this command.  It requires --force to work.`,
+
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := app.UnsetKey(app.Options{Wd: wd, Force: force})
 		log.FatalExit(err)

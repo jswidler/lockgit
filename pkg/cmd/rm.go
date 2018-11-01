@@ -31,6 +31,7 @@ var rmCmd = &cobra.Command{
 	Short:   "Remove files from the vault",
 	Aliases: []string{"remove"},
 
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		app.RemoveFromVault(app.Options{Wd: wd}, args)
 	},

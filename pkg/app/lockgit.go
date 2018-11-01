@@ -185,10 +185,10 @@ func keyToString(key []byte) string {
 func keyToBytes(key string) ([]byte, error) {
 	k, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(key)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "invalid key")
 	}
 	if len(k) != 32 {
-		return nil, errors.New("key is not the correct length")
+		return nil, errors.New("invalid key: key is not the correct length")
 	}
 	return k, nil
 }

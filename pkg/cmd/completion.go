@@ -32,6 +32,7 @@ var completionCmd = &cobra.Command{
 	Hidden: true,
 	Short:  "Generates bash/zsh completion scripts",
 
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if zsh && output == "" {
 			rootCmd.GenZshCompletion(os.Stdout)

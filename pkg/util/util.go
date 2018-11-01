@@ -22,6 +22,10 @@ package util
 
 import (
 	"os"
+	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 )
 
 // Tests if a resource exists on the filesystem
@@ -45,5 +49,22 @@ func ExistsDir(path string) (bool, error) {
 		return false, nil
 	} else {
 		return false, err
+	}
+}
+
+// Return a validator for named positional arguments from a command-line
+func CobraNamedPositionalArgs(argNames ...string) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		if len(args) > len(argNames) {
+			return errors.Errorf("too many arguments: got %d, expected %d", len(args), len(argNames))
+		} else if len(args) < len(argNames) {
+			var s string
+			if len(args)+1 != len(argNames) {
+				s = "s"
+			}
+			return errors.Errorf("missing required argument%s: %s", s, strings.Join(argNames[len(args):], ", "))
+		} else {
+			return nil
+		}
 	}
 }

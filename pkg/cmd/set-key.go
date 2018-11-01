@@ -26,6 +26,7 @@ import (
 
 	"github.com/jswidler/lockgit/pkg/app"
 	"github.com/jswidler/lockgit/pkg/log"
+	"github.com/jswidler/lockgit/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -36,6 +37,8 @@ var setKeyCmd = &cobra.Command{
 	Long: `Set the key for the current vault.
 
 The key for the vault can be displayed using the reveal-key command.`,
+
+	Args: util.CobraNamedPositionalArgs("KEY"),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Fprint(os.Stderr, "invalid key\n")

@@ -24,7 +24,6 @@ import (
 	"fmt"
 
 	"github.com/jswidler/lockgit/pkg/app"
-
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +32,7 @@ var revealKeyCmd = &cobra.Command{
 	Use:   "reveal-key",
 	Short: "Reveal the lockgit key for the current repo",
 
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		key := app.GetKey(app.Options{Wd: wd})
 		fmt.Println(key)
