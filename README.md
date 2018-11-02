@@ -56,7 +56,7 @@ myserverconfig
 └── nginx.conf
 ```
  
-Some of the files are too sensitive to check into git without encryption. Let's encrypt them with Lockgit
+Some of the files are too sensitive to check into git without encryption. Let's encrypt them with Lockgit.
  
 
 ##### Initialize a vault
