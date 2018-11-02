@@ -30,8 +30,8 @@ import (
 // globsCmd represents the globs command
 var globsCmd = &cobra.Command{
 	Use:   "globs",
-	Short: "List all saved glob patterns",
-	Long:  "List all saved glob patterns.\n\n" + globHelp,
+	Short: "List the saved glob patterns in the vault",
+	Long:  "List the saved glob patterns in the vault.\n\n" + globHelp,
 
 	Aliases: []string{"glob"},
 

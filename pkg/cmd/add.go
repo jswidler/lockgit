@@ -29,7 +29,7 @@ import (
 // addCmd represents the add command
 var addCmd = &cobra.Command{
 	Use:   "add <file|glob> ...",
-	Short: "Add files to the vault",
+	Short: "Add files and glob patterns to the vault",
 	Long: `Add files to the vault, either individually or with a glob pattern.
 
 For each input, if it matches a file exactly, only that single will be added to the vault.  If the input matches a

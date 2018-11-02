@@ -27,14 +27,14 @@ Available Commands:
   set-key     Set the key for the current vault
   reveal-key  Reveal the lockgit key for the current repo
   delete-key  Delete the key for the current vault
-  add         Add files to the vault
-  rm          Remove files and globs from the vault
+  add         Add files and glob patterns to the vault
+  rm          Remove files and globs patterns from the vault
   status      Check if tracked files match the ones in the vault
   commit      Commit changes of tracked files to the vault
   open        Decrypt and restore secrets in the vault
   close       Delete plaintext secrets
   ls          List the files in the lockgit vault
-  globs       List all saved glob patterns
+  globs       List the saved glob patterns in the vault
   help        Help about any command
 ```
 
