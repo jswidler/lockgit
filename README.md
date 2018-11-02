@@ -28,12 +28,13 @@ Available Commands:
   reveal-key  Reveal the lockgit key for the current repo
   delete-key  Delete the key for the current vault
   add         Add files to the vault
-  rm          Remove files from the vault
+  rm          Remove files and globs from the vault
   status      Check if tracked files match the ones in the vault
   commit      Commit changes of tracked files to the vault
   open        Decrypt and restore secrets in the vault
   close       Delete plaintext secrets
   ls          List the files in the lockgit vault
+  globs       List all saved glob patterns
   help        Help about any command
 ```
 
@@ -45,20 +46,17 @@ Suppose there is a small project with the following files in it.
 ```
 myserverconfig
 ├── config
-│   ├── tls.ca
-│   ├── tls.crt
-│   └── tls.key
-├── creds
-│   └── awscreds
-├── scripts
-│   ├── init.sh
-│   └── run.sh
-└── templates
-    └── nginx.conf.tpl
- ````
+│   ├── config.yml
+│   ├── creds.json
+│   └── tls
+│       ├── cert.pem
+│       ├── chain.pem
+│       ├── fullchain.pem
+│       └── privkey.pem
+└── nginx.conf
+```
  
- Two of the files have secrets in them, `config/tls.key` and `creds/awscreds`.  Let's put
- them in a Lockgit vault.  
+Some of the files are too sensitive to check into git without encryption. Let's encrypt them with Lockgit
  
 
 ##### Initialize a vault
@@ -67,17 +65,35 @@ First, initialize a new vault in the `myserverconfig` directory:
 ```
 $ lockgit init
 Initialized empty lockgit vault in /home/myserverconfig/.lockgit
+Key added to /Users/jesse/.lockgit.yml
 ```
 
 ##### Add secrets
 Next, add the secrets to it
 
 ```
-$ lockgit add creds/awscreds config/tls.key
-added creds/awscreds to vault
-added config/tls.key to vault
+$ lockgit add '**/creds.json' '**/*.pem'
+added file 'config/creds.json' to vault
+added file 'config/tls/chain.pem' to vault
+added file 'config/tls/cert.pem' to vault
+added file 'config/tls/privkey.pem' to vault
+added file 'config/tls/fullchain.pem' to vault
+added glob pattern '**/*.pem' to vault
+added glob pattern '**/creds.json' to vault
 ```
 We can see what secrets are in the vault with either `lockgit ls` or `lockgit status` .
+
+```
+$ lockgit status
+            FILE           | UPDATED |    PATTERN    |               HASH
++--------------------------+---------+---------------+----------------------------------+
+  config/creds.json        | false   | **/creds.json | Oov8Rpf2YOU0mEQhGlHeDCzFHXRtkFnu
+  config/tls/cert.pem      | false   | **/*.pem      | miehMYgqYtIVGMpVnss4ZZzlAQRpZAVd
+  config/tls/chain.pem     | false   | **/*.pem      | m4_U5mtAOlEuXL5raxvWHRxBq2vq24Q3
+  config/tls/fullchain.pem | false   | **/*.pem      | a1r4uoyv0XQpeltE7NjWD_93ufb27gzK
+  config/tls/privkey.pem   | false   | **/*.pem      | BT19Sb8kQxx5Ztp20cX4IJQEAJE5vAkp
+```
+
 
 The files have been encrypted and stored in the `.lockgit` directory.  It currently looks
 something like this:
@@ -85,8 +101,11 @@ something like this:
 ```
 .lockgit/
 ├── data
-│   ├── uJl28qpmje-cWGDUv3p8iiJgcANTPKdK
-│   └── yocrUblPqDoRaKYnjE6VfQLQo6LrlrHT
+│   ├── BT19Sb8kQxx5Ztp20cX4IJQEAJE5vAkp
+│   ├── Oov8Rpf2YOU0mEQhGlHeDCzFHXRtkFnu
+│   ├── a1r4uoyv0XQpeltE7NjWD_93ufb27gzK
+│   ├── m4_U5mtAOlEuXL5raxvWHRxBq2vq24Q3
+│   └── miehMYgqYtIVGMpVnss4ZZzlAQRpZAVd
 ├── lgconfig
 └── manifest
 ``` 
@@ -94,10 +113,7 @@ something like this:
 ##### Use source conntrol
 You should check the entire `.lockgit` folder into source control.  
 
-Lockgit can also update `.gitignore` as you use it.  We now have two secrets in
-the `myserverconfig` folder: `config/tls.key`, and `creds/awscred`.
-Both of these files have been added to `.gitignore` to help prevent them from being
-checked in.
+Lockgit can also update `.gitignore` as you use it, which helps prevent accidentally checking in your secrets.  `**/creds.json`, `**/*.pem` have both been added to it in our example
 
 ##### Delete and Restore plaintext secrets
 Delete and restore your secrets with `lockgit close` and `lockgit open`.
@@ -123,24 +139,30 @@ down somewhere, you will lose the contents of the vault.
 
 ##### Make changes to your secrets
 After you update a secret, lockgit can detect the change.
+
 ```
 $ lockgit status
-       FILE      | UPDATED |               HASH
-+----------------+---------+----------------------------------+
-  config/tls.key | true    | uJl28qpmje-cWGDUv3p8iiJgcANTPKdK
-  creds/awscreds | false   | yocrUblPqDoRaKYnjE6VfQLQo6LrlrHT
+            FILE           | UPDATED |    PATTERN    |               HASH
++--------------------------+---------+---------------+----------------------------------+
+  config/creds.json        | true    | **/creds.json | 2HDEn74HAAws-D1Y2HS1ak7e0xGSo7kN
+  config/tls/cert.pem      | false   | **/*.pem      | miehMYgqYtIVGMpVnss4ZZzlAQRpZAVd
+  config/tls/chain.pem     | false   | **/*.pem      | m4_U5mtAOlEuXL5raxvWHRxBq2vq24Q3
+  config/tls/fullchain.pem | false   | **/*.pem      | a1r4uoyv0XQpeltE7NjWD_93ufb27gzK
+  config/tls/privkey.pem   | false   | **/*.pem      | BT19Sb8kQxx5Ztp20cX4IJQEAJE5vAkp
 ```
 
 To update the encrypted secret, first use `lockgit commit`
+
 ```
 $ lockgit commit
-/home/myserverconfig/config/tls.key updated
+config/creds.json updated
 ```
 
 Then commit the changes to source control.  In this case there will be three changes:
+
 ```
-deleted:    .lockgit/data/uJl28qpmje-cWGDUv3p8iiJgcANTPKdK
-new file:   .lockgit/data/ZnrcquH2lU9KF6HW0E8oi4PGEISvqvc3
+deleted:    .lockgit/data/2HDEn74HAAws-D1Y2HS1ak7e0xGSo7kN
+new file:   .lockgit/data/Ik0gMeLDyIsIZNmNIEoeLzuH22kG2Cdp
 modified:   .lockgit/manifest
 ```
 
@@ -151,6 +173,9 @@ see what secrets people are changing when reviewing commits.
 
 ```
 $ cat .lockgit/manifest
-ZnrcquH2lU9KF6HW0E8oi4PGEISvqvc3	config/tls.key
-yocrUblPqDoRaKYnjE6VfQLQo6LrlrHT	creds/awscreds
+Ik0gMeLDyIsIZNmNIEoeLzuH22kG2Cdp	config/creds.json
+miehMYgqYtIVGMpVnss4ZZzlAQRpZAVd	config/tls/cert.pem
+m4_U5mtAOlEuXL5raxvWHRxBq2vq24Q3	config/tls/chain.pem
+a1r4uoyv0XQpeltE7NjWD_93ufb27gzK	config/tls/fullchain.pem
+BT19Sb8kQxx5Ztp20cX4IJQEAJE5vAkp	config/tls/privkey.pem
 ```
