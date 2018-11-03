@@ -147,7 +147,9 @@ func AddToVault(opts Options, patterns []string) error {
 		// expand each input to one or more filesΩ
 		rtype, files, pattern, err := util.GetFiles(pattern)
 		if err != nil {
-			return err
+			log.LogError(errors.Wrapf(err, "an error occurred processing the pattern %s", pattern))
+			hadError = true
+			continue
 		}
 		if len(files) == 0 {
 			log.LogError(errors.Errorf("cannot add %s: no files match", ctx.ProjRelPath(pattern)))
@@ -233,31 +235,66 @@ func Commit(opts Options) error {
 	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true})
 	opts.Force = true // for addFile
 
-	changes := false
+	// Collect all the files which are tracked by patterns
+	patternMatched := make([]string, 0, 64)
+	if len(ctx.Config.Patterns) > 0 {
+		for _, pattern := range ctx.Config.Patterns {
+			absPattern := filepath.Join(ctx.ProjectPath, pattern)
+
+			_, files, _, err := util.GetFiles(absPattern)
+			log.FatalPanic(err)
+			patternMatched = append(patternMatched, files...)
+		}
+	}
+
+	if len(manifest.Files) == 0 && len(patternMatched) == 0 {
+		log.Info("vault is empty")
+		return nil
+	}
+
+	hadError := false
+	manifestChange := false
+	defer func() { saveChanges(ctx, manifest, manifestChange, false) }()
+
 	for _, filemeta := range manifest.Files {
+		patternMatched = util.Filter(patternMatched, func(path string) bool {
+			return path != filemeta.AbsPath
+		})
+
 		datafile, err := content.NewDatafile(ctx, filemeta.AbsPath)
 		if err != nil && !os.IsNotExist(err) {
 			log.LogError(err)
+			hadError = true
 			continue
 		}
 		if !datafile.MatchesHash(filemeta.Sha) {
 			err := addFile(ctx, &manifest, filemeta.AbsPath, opts)
 			if err != nil {
-				if changes {
-					manifest.Export()
-				}
-				return err
+				log.LogError(err)
+				hadError = true
 			} else {
-				changes = true
-				log.Info(fmt.Sprintf("%s updated", ctx.RelPath(filemeta.AbsPath)))
+				manifestChange = true
+				log.Info(fmt.Sprintf("'%s' updated", ctx.RelPath(filemeta.AbsPath)))
 			}
 		}
 	}
-	if !changes {
-		log.Info("no changes")
-	} else {
-		manifest.Export()
+
+	// iterate through any files matched, but that were not seen in the manifest
+	for _, filename := range patternMatched {
+		err := addFile(ctx, &manifest, filename, opts)
+		if err != nil {
+			log.LogError(err)
+			hadError = true
+		} else {
+			manifestChange = true
+			log.Info(fmt.Sprintf("'%s' added to the vault", ctx.RelPath(filename)))
+		}
 	}
+
+	if hadError {
+		return errors.New("not all files were committed successfully - set output for details")
+	}
+
 	return nil
 }
 
