@@ -24,14 +24,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/bmatcuk/doublestar"
 	"github.com/jswidler/lockgit/pkg/content"
 	"github.com/jswidler/lockgit/pkg/gitignore"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/jswidler/lockgit/pkg/util"
-	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
@@ -261,66 +259,6 @@ func Commit(opts Options) error {
 		manifest.Export()
 	}
 	return nil
-}
-
-func Status(opts Options) {
-	ctx, manifest := loadcm(opts.Wd, loadcmopts{})
-
-	// Collect all the files which are tracked by patterns
-	patternMatched := make([]string, 0, 64)
-	if len(ctx.Config.Patterns) > 0 {
-		for _, pattern := range ctx.Config.Patterns {
-			absPattern := filepath.Join(ctx.ProjectPath, pattern)
-
-			_, files, _, err := util.GetFiles(absPattern)
-			log.FatalPanic(err)
-			patternMatched = append(patternMatched, files...)
-		}
-	}
-
-	if len(manifest.Files) == 0 && len(patternMatched) == 0 {
-		log.Info("vault is empty")
-		return
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"file", "updated", "pattern", "hash"})
-	table.SetBorder(false)
-
-	for _, filemeta := range manifest.Files {
-		var updated string
-		datafile, err := content.NewDatafile(ctx, filemeta.AbsPath)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				log.LogError(err)
-			}
-			updated = "unavailable"
-		} else {
-			updated = strconv.FormatBool(!datafile.MatchesHash(filemeta.Sha))
-		}
-
-		patternMatched = util.Filter(patternMatched, func(path string) bool {
-			return path != filemeta.AbsPath
-		})
-
-		table.Append([]string{
-			filemeta.RelPath,
-			updated,
-			firstMatchedPattern(datafile.Path, ctx.Config.Patterns),
-			filemeta.ShaString(),
-		})
-	}
-
-	for _, notCommited := range patternMatched {
-		table.Append([]string{
-			ctx.ProjRelPath(notCommited),
-			"new file",
-			firstMatchedPattern(ctx.ProjRelPath(notCommited), ctx.Config.Patterns),
-			"",
-		})
-	}
-
-	table.Render()
 }
 
 func OpenVault(opts Options) {

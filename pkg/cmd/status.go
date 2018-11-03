@@ -21,7 +21,10 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/jswidler/lockgit/pkg/app"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +36,17 @@ var statusCmd = &cobra.Command{
 
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		app.Status(cliFlags())
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetBorder(false)
+
+		headers, rows := app.Status(cliFlags())
+
+		table.SetHeader(headers)
+		for _, row := range rows {
+			table.Append(row)
+		}
+
+		table.Render()
 	},
 }
 
