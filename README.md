@@ -1,13 +1,15 @@
-# Lockgit
+<img src="./images/lockgit.png" alt="LockGit" width="400px">
 
-Storing secrets in git is dangerous and sometimes even considered a bad practice.
+# 
+
+Storing secrets in Git is dangerous and sometimes even considered a bad practice.
 Yet, many people require a place to store secrets and git is a useful tool that we
-are used to using. So - enter __Lockgit__, a tool to make it easy to use encryption
-to safely store secrets in a git repository.
+are used to using. So - enter __LockGit__, a tool to make it easy to use encryption
+to safely store secrets in a Git repository.
 
 ## Getting Started
 
-Lockgit can be easily installed as a binary with either Homebrew on OSX or Linuxbrew
+LockGit can be easily installed as a binary with either Homebrew on OSX or Linuxbrew
 on Linux.
 
 ```
@@ -39,7 +41,7 @@ Available Commands:
 ```
 
 
-## Using Lockgit
+## Using LockGit
 
 Suppose there is a small project with the following files in it.  
 
@@ -56,7 +58,7 @@ myserverconfig
 └── nginx.conf
 ```
  
-Some of the files are too sensitive to check into git without encryption. Let's encrypt them with Lockgit.
+Some of the files are too sensitive to check into Git without encryption. Let's encrypt them with LockGit.
  
 
 ##### Initialize a vault
@@ -113,7 +115,7 @@ something like this:
 ##### Use source conntrol
 You should check the entire `.lockgit` folder into source control.  
 
-Lockgit can also update `.gitignore` as you use it, which helps prevent accidentally checking in your secrets.  `**/creds.json`, `**/*.pem` have both been added to it in our example
+LockGit can also update `.gitignore` as you use it, which helps prevent accidentally checking in your secrets.  `**/creds.json`, `**/*.pem` have both been added to it in our example
 
 ##### Delete and Restore plaintext secrets
 Delete and restore your secrets with `lockgit close` and `lockgit open`.
