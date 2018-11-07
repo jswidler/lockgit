@@ -65,7 +65,7 @@ func Status(opts Options) ([]string, [][]string) {
 			}
 			updated = "unavailable"
 		} else {
-			updated = strconv.FormatBool(!datafile.MatchesHash(filemeta.Sha))
+			updated = strconv.FormatBool(!datafile.MatchesCurrent(filemeta))
 		}
 
 		patternMatched = util.Filter(patternMatched, func(path string) bool {
@@ -75,7 +75,7 @@ func Status(opts Options) ([]string, [][]string) {
 		table = append(table, []string{
 			filemeta.RelPath,
 			updated,
-			firstMatchedPattern(datafile.Path, ctx.Config.Patterns),
+			firstMatchedPattern(datafile.Path(), ctx.Config.Patterns),
 			filemeta.ShaString(),
 		})
 	}

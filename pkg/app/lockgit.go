@@ -40,7 +40,7 @@ func openFromVault(ctx c.Context, filemeta c.Filemeta, params Options) error {
 		datafile, err := c.NewDatafile(ctx, filemeta.AbsPath)
 		if err == nil {
 			// Able to read the file
-			if datafile.MatchesHash(filemeta.Sha) {
+			if datafile.MatchesCurrent(filemeta) {
 				log.Verbose(fmt.Sprintf("skipping %s - file exists and matches hash",
 					ctx.RelPath(filemeta.AbsPath)))
 				return nil
@@ -63,9 +63,9 @@ func openFromVault(ctx c.Context, filemeta c.Filemeta, params Options) error {
 	if err != nil {
 		return err
 	}
-	absPath := filepath.Join(ctx.ProjectPath, datafile.Path)
+	absPath := filepath.Join(ctx.ProjectPath, datafile.Path())
 	_ = os.Mkdir(filepath.Dir(absPath), 0755)
-	err = ioutil.WriteFile(absPath, data, os.FileMode(datafile.Perm))
+	err = ioutil.WriteFile(absPath, data, os.FileMode(datafile.Perm()))
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func deletePlaintextFile(ctx c.Context, filemeta c.Filemeta, params Options) err
 			return err
 		}
 
-		if !datafile.MatchesHash(filemeta.Sha) {
+		if !datafile.MatchesCurrent(filemeta) {
 			return fmt.Errorf("%s has changed.  To delete anyway enable --force\n", ctx.RelPath(filemeta.AbsPath))
 		}
 	}
@@ -118,7 +118,7 @@ func addFile(ctx c.Context, manifest *c.Manifest, absPath string, opts Options) 
 	}
 	filemeta := c.NewFilemeta(absPath, datafile)
 
-	datafile.Write(ctx, filemeta)
+	datafile.Write(filemeta)
 
 	if mindx >= 0 {
 		oldDatafile := c.MakeDatafilePath(ctx, manifest.Files[mindx])

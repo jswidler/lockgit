@@ -267,7 +267,8 @@ func Commit(opts Options) error {
 			hadError = true
 			continue
 		}
-		if !datafile.MatchesHash(filemeta.Sha) {
+
+		if !datafile.MatchesCurrent(filemeta) {
 			err := addFile(ctx, &manifest, filemeta.AbsPath, opts)
 			if err != nil {
 				log.LogError(err)

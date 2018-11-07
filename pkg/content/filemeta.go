@@ -35,7 +35,7 @@ type Filemeta struct {
 func NewFilemeta(absPath string, datafile Datafile) Filemeta {
 	return Filemeta{
 		AbsPath: absPath,
-		RelPath: datafile.Path,
+		RelPath: datafile.Path(),
 		Sha:     datafile.Hash(),
 	}
 }
@@ -47,27 +47,3 @@ func (f Filemeta) ShaString() string {
 func (f Filemeta) String() string {
 	return fmt.Sprintf("%s\t%s", f.ShaString(), f.RelPath)
 }
-
-/* if you are worried about hash collisions for some reason...
-func hashFileSecure(path string) ([]byte, error) {
-	h := sha256.New()
-	if err := readIn(path,h); err != nil {
-		return nil, err
-	}
-	hash := h.Sum(nil)
-	return bcrypt.GenerateFromPassword(hash, -1)
-}
-
-func CompareToHashSecure(path string, hash []byte) (bool, error) {
-	h := sha256.New()
-	if err := readIn(path,h); err != nil {
-		return false, err
-	}
-	sha := h.Sum(nil)
-	err := bcrypt.CompareHashAndPassword(hash, sha)
-	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return false, nil
-	}
-	return err == nil, err
-}
-*/

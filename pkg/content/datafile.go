@@ -33,12 +33,18 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/pkg/errors"
 )
 
 type Datafile struct {
+	content dcontent
+	ctx     *Context
+}
+
+type dcontent struct {
 	Ver  int
 	Data string
 	Path string
@@ -59,23 +65,34 @@ func NewDatafile(ctx Context, absPath string) (Datafile, error) {
 		return d, errors.Wrap(err, "unable to read")
 	}
 	datafile := Datafile{
-		Ver:  1,
-		Data: base64.RawStdEncoding.EncodeToString(filedata),
-		Path: relPath,
-		Perm: int(info.Mode().Perm()),
+		ctx: &ctx,
+		content: dcontent{
+			Ver:  1,
+			Data: base64.RawStdEncoding.EncodeToString(filedata),
+			Path: relPath,
+			Perm: int(info.Mode().Perm()),
+		},
 	}
 	return datafile, nil
 }
 
-func (d Datafile) Serialize() []byte {
-	jsondata, err := json.Marshal(d)
-	log.FatalPanic(err)
-	return jsondata
+func (d Datafile) Path() string {
+	return d.content.Path
 }
 
-func (d Datafile) Write(ctx Context, filemeta Filemeta) {
-	path := MakeDatafilePath(ctx, filemeta)
-	ciphertext := encrypt(ctx.Key, compress(d.Serialize()))
+func (d Datafile) Perm() int {
+	return d.content.Perm
+}
+
+func (d Datafile) Serialize() []byte {
+	jsondata, err := json.Marshal(d.content)
+	log.FatalPanic(err)
+	return encrypt(d.ctx.Key, compress(jsondata))
+}
+
+func (d Datafile) Write(filemeta Filemeta) {
+	path := MakeDatafilePath(*d.ctx, filemeta)
+	ciphertext := d.Serialize()
 	err := ioutil.WriteFile(path, ciphertext, 0644)
 	log.FatalPanic(err)
 }
@@ -99,27 +116,36 @@ func (d Datafile) Hash() []byte {
 	return hash
 }
 
-func (d Datafile) MatchesHash(hash []byte) bool {
-	h := sha1.New()
-	h.Write(hash[:4])
-	h.Write(d.Serialize())
-	sha := h.Sum(nil)
-	return bytes.Equal(sha, hash[4:])
+// Tests if a potential Datafile update matches the one already in the vault
+func (d Datafile) MatchesCurrent(filemeta Filemeta) bool {
+	currentDatafile, err := ReadDatafile(*d.ctx, filemeta)
+	if err != nil {
+		// If we can't read the datafile, just say it doesn't match it
+		return false
+	}
+	return currentDatafile.Equal(d)
+}
+
+func (d Datafile) Equal(other Datafile) bool {
+	return reflect.DeepEqual(d, other)
 }
 
 func ReadDatafile(ctx Context, filemeta Filemeta) (Datafile, error) {
-	data := Datafile{}
+	data := Datafile{
+		ctx:     &ctx,
+		content: dcontent{},
+	}
 	ciphertext, err := ioutil.ReadFile(MakeDatafilePath(ctx, filemeta))
 	if err != nil {
 		return data, err
 	}
 	plaintext := decompress(decrypt(ctx.Key, ciphertext))
-	err = json.Unmarshal(plaintext, &data)
+	err = json.Unmarshal(plaintext, &data.content)
 	return data, err
 }
 
 func (d Datafile) DecodeData() ([]byte, error) {
-	return base64.RawStdEncoding.DecodeString(d.Data)
+	return base64.RawStdEncoding.DecodeString(d.content.Data)
 }
 
 func compress(data []byte) []byte {

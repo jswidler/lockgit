@@ -93,6 +93,35 @@ func TestDoNotAddGlobWithoutMatches(t *testing.T) {
 	}
 }
 
+func TestCommitNewViaGlob(t *testing.T) {
+	opts := opts("globtest4")
+	setupVault(t, opts)
+	createFilesC(opts.Wd)
+
+	_ = app.AddToVault(opts, []string{"dir1/dir12/**"})
+
+	files := app.Ls(opts)
+	if len(files) != 2 {
+		t.Errorf("expected two files")
+	}
+
+	dir := filepath.Join(opts.Wd, "dir1", "dir12")
+	f1 := filepath.Join(dir, "filea12")
+	f2 := filepath.Join(dir, "new")
+	_ = ioutil.WriteFile(f1, []byte(data2), 0644)
+	_ = ioutil.WriteFile(f2, []byte(data2), 0644)
+
+	err := app.Commit(opts)
+	if err != nil {
+		t.Errorf("commit to succeed")
+	}
+
+	files = app.Ls(opts)
+	if len(files) != 3 {
+		t.Errorf("expected three files")
+	}
+}
+
 func createFilesC(projectdir string) {
 	d1 := filepath.Join(projectdir, "dir1")
 	d2 := filepath.Join(projectdir, "dir2")
