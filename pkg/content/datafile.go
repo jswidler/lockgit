@@ -26,7 +26,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -98,22 +97,15 @@ func (d Datafile) Write(filemeta Filemeta) {
 }
 
 func MakeDatafilePath(ctx Context, filemeta Filemeta) string {
-	return filepath.Join(ctx.DataPath, base64.RawURLEncoding.EncodeToString(filemeta.Sha))
+	return filepath.Join(ctx.DataPath, base64.RawURLEncoding.EncodeToString(filemeta.Id))
 }
 
-func (d Datafile) Hash() []byte {
-	salt := make([]byte, 4, 24)
-	_, err := rand.Read(salt)
+func (d Datafile) Id() []byte {
+	randomId := make([]byte, 24)
+	_, err := rand.Read(randomId)
 	log.FatalPanic(err)
 
-	h := sha1.New()
-	h.Write(salt)
-	h.Write(d.Serialize())
-
-	sha := h.Sum(nil)
-	hash := salt[0:24]
-	copy(hash[4:], sha)
-	return hash
+	return randomId
 }
 
 // Tests if a potential Datafile update matches the one already in the vault

@@ -34,7 +34,7 @@ import (
 // Returns (headers, rows) for a table
 func Status(opts Options) ([]string, [][]string) {
 	ctx, manifest := loadcm(opts.Wd, loadcmopts{})
-	headers := []string{"file", "updated", "pattern", "hash"}
+	headers := []string{"file", "updated", "pattern", "id"}
 
 	// Collect all the files which are tracked by patterns
 	patternMatched := make([]string, 0, 64)
@@ -76,7 +76,7 @@ func Status(opts Options) ([]string, [][]string) {
 			filemeta.RelPath,
 			updated,
 			firstMatchedPattern(datafile.Path(), ctx.Config.Patterns),
-			filemeta.ShaString(),
+			filemeta.IdString(),
 		})
 	}
 

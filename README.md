@@ -87,7 +87,7 @@ We can see what secrets are in the vault with either `lockgit ls` or `lockgit st
 
 ```
 $ lockgit status
-            FILE           | UPDATED |    PATTERN    |               HASH
+            FILE           | UPDATED |    PATTERN    |                ID
 +--------------------------+---------+---------------+----------------------------------+
   config/creds.json        | false   | **/creds.json | Oov8Rpf2YOU0mEQhGlHeDCzFHXRtkFnu
   config/tls/cert.pem      | false   | **/*.pem      | miehMYgqYtIVGMpVnss4ZZzlAQRpZAVd
@@ -144,7 +144,7 @@ After you update a secret, lockgit can detect the change.
 
 ```
 $ lockgit status
-            FILE           | UPDATED |    PATTERN    |               HASH
+            FILE           | UPDATED |    PATTERN    |                ID
 +--------------------------+---------+---------------+----------------------------------+
   config/creds.json        | true    | **/creds.json | 2HDEn74HAAws-D1Y2HS1ak7e0xGSo7kN
   config/tls/cert.pem      | false   | **/*.pem      | miehMYgqYtIVGMpVnss4ZZzlAQRpZAVd

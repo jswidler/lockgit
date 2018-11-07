@@ -29,21 +29,21 @@ import (
 type Filemeta struct {
 	AbsPath string
 	RelPath string
-	Sha     []byte
+	Id      []byte
 }
 
 func NewFilemeta(absPath string, datafile Datafile) Filemeta {
 	return Filemeta{
 		AbsPath: absPath,
 		RelPath: datafile.Path(),
-		Sha:     datafile.Hash(),
+		Id:      datafile.Id(),
 	}
 }
 
-func (f Filemeta) ShaString() string {
-	return base64.RawURLEncoding.EncodeToString(f.Sha)
+func (f Filemeta) IdString() string {
+	return base64.RawURLEncoding.EncodeToString(f.Id)
 }
 
 func (f Filemeta) String() string {
-	return fmt.Sprintf("%s\t%s", f.ShaString(), f.RelPath)
+	return fmt.Sprintf("%s\t%s", f.IdString(), f.RelPath)
 }

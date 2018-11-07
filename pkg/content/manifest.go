@@ -66,7 +66,7 @@ func ImportManifest(ctx Context) (Manifest, error) {
 		if err != nil {
 			return m, &ManifestLoadError{ctx.RelPath(m.path), "wrong format"}
 		}
-		m.Add(Filemeta{Sha: sha, RelPath: tokens[1], AbsPath: filepath.Join(ctx.ProjectPath, tokens[1])})
+		m.Add(Filemeta{Id: sha, RelPath: tokens[1], AbsPath: filepath.Join(ctx.ProjectPath, tokens[1])})
 	}
 	err = scanner.Err()
 	if err != nil {

@@ -51,10 +51,10 @@ func TestStatus(t *testing.T) {
 	}
 
 	if table[0][3] == "" {
-		t.Errorf("expected first file to have a hash")
+		t.Errorf("expected first file to have an id")
 	}
 	if table[1][3] != "" {
-		t.Errorf("expected second file not to have a hash")
+		t.Errorf("expected second file not to have an id")
 	}
 
 	app.AddToVault(opts, []string{"dir2"})

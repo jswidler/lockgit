@@ -41,7 +41,7 @@ func openFromVault(ctx c.Context, filemeta c.Filemeta, params Options) error {
 		if err == nil {
 			// Able to read the file
 			if datafile.MatchesCurrent(filemeta) {
-				log.Verbose(fmt.Sprintf("skipping %s - file exists and matches hash",
+				log.Verbose(fmt.Sprintf("skipping %s - file exists and is unchanged",
 					ctx.RelPath(filemeta.AbsPath)))
 				return nil
 			} else {
