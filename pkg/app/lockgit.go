@@ -87,7 +87,6 @@ func deletePlaintextFile(ctx c.Context, filemeta c.Filemeta, params Options) err
 			return err
 		}
 
-		datafile.MatchesHash(filemeta.Sha)
 		if !datafile.MatchesHash(filemeta.Sha) {
 			return fmt.Errorf("%s has changed.  To delete anyway enable --force\n", ctx.RelPath(filemeta.AbsPath))
 		}
