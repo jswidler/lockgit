@@ -16,7 +16,7 @@ on Linux.
 brew install jswidler/tap/lockgit
 ```
 
-You can also easily build from source with `go get github.com/jswidler/lockgit`.
+You can also easily build from source with `go get github.com/jswidler/lockgit`.  Note that bash and zsh completion are only installed for you if you use brew, so that is the preferred method.
 
 ### List of commands
 
