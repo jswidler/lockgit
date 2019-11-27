@@ -123,7 +123,7 @@ func readKeyOldV05(c Context) ([]byte, error) {
 }
 
 // Find the .lockgit directory given a path.  If there is no .lockgit directory
-// in the provided path, each parent directory will be searched untill one is found.
+// in the provided path, each parent directory will be searched until one is found.
 // Returns the path or an error if none is found.
 func findLockgit(path string) (string, error) {
 	for {

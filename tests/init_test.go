@@ -53,7 +53,7 @@ func testLockgitAndKeyExists(t *testing.T, testProjectPath string) {
 	} else if !info.IsDir() {
 		t.Fatal(".lockgit exists but is not a directory")
 	} else if info.Mode().Perm() != 0755 {
-		t.Error(".lockgit exists but has wrong permissons")
+		t.Error(".lockgit exists but has wrong permissions")
 	}
 
 	// TODO: Test there is a key in the config file
