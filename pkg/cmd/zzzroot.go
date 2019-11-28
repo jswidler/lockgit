@@ -30,6 +30,7 @@ import (
 	"strings"
 
 	"github.com/jswidler/lockgit/pkg/app"
+	"github.com/jswidler/lockgit/pkg/build"
 	"github.com/jswidler/lockgit/pkg/log"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -80,15 +81,16 @@ var cmdOrder = []string{
 }
 
 func init() {
+	rootCmd.Version = build.Version
+
 	cobra.OnInitialize(initConfig)
 
 	cmds := cmdList(rootCmd.Commands())
 	sort.Sort(cmds)
-
 	cobra.EnableCommandSorting = false
+
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ~/.lockgit.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&noUpdateGitignore, "no-update-gitignore", "", false, "disable updating .gitignore file")
-
 	viper.BindPFlag("no-update-gitignore", rootCmd.PersistentFlags().Lookup("no-update-gitignore"))
 }
 

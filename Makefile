@@ -16,9 +16,9 @@ coverage: test cover
 
 build:
 ifndef XCBUILD
-	$(GOBUILD) -o build/$(BINARY_NAME) -v
+	$(GOBUILD) -o build/$(BINARY_NAME) -v  -ldflags "-X github.com/jswidler/lockgit/pkg/build.Version=$(VERSION)"
 else
-	gox -output="build/$(VERSION)/{{.OS}}_{{.Arch}}/$(BINARY_NAME)" -os="darwin linux" -arch="386 amd64"
+	gox -output="build/$(VERSION)/{{.OS}}_{{.Arch}}/$(BINARY_NAME)" -os="darwin linux" -arch="386 amd64" -ldflags "-X github.com/jswidler/lockgit/pkg/build.Version=$(VERSION)"
 	mkdir -p build/$(VERSION)
 	zip -j build/$(VERSION)/$(BINARY_NAME)_$(VERSION)_darwin_386.zip build/$(VERSION)/darwin_386/$(BINARY_NAME)
 	zip -j build/$(VERSION)/$(BINARY_NAME)_$(VERSION)_darwin_amd64.zip build/$(VERSION)/darwin_amd64/$(BINARY_NAME)
@@ -48,14 +48,3 @@ clean:
 run:
 	$(GOBUILD) -o build/$(BINARY_NAME) -v
 	./build/$(BINARY_NAME)
-
-deps:
-	$(GOGET) github.com/jstemmer/go-junit-report
-	$(GOGET) github.com/bmatcuk/doublestar
-	$(GOGET) github.com/mitchellh/gox
-	$(GOGET) github.com/mitchellh/go-homedir
-	$(GOGET) github.com/nu7hatch/gouuid
-	$(GOGET) github.com/olekukonko/tablewriter
-	$(GOGET) github.com/pkg/errors
-	$(GOGET) github.com/spf13/cobra
-	$(GOGET) github.com/spf13/viper

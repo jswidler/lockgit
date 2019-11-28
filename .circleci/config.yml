@@ -1,19 +1,19 @@
 version: 2
 jobs:
   build:
-    working_directory: /go/src/github.com/jswidler/lockgit
     docker:
-    - image: circleci/golang:1.11
+    - image: circleci/golang:1.13
     steps:
     - checkout
     - restore_cache:
         keys:
-        - cache2
-    - run: make deps
+        - go-mod-v1-{{ checksum "go.sum" }}
+    - run: go mod download
+    - run: go get github.com/jstemmer/go-junit-report
     - save_cache:
-        key: cache2
+        key: go-mod-v1-{{ checksum "go.sum" }}
         paths:
-        - ~/.cache/go-build
+        - "/go/pkg/mod"
     - run: make test coverage
     - store_test_results:
         path: build
