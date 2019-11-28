@@ -1,5 +1,11 @@
 <img src="./images/lockgit.png" alt="LockGit" width="400px">
 
+[![License](https://img.shields.io/github/license/jswidler/lockgit)](https://github.com/jswidler/lockgit/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/jswidler/lockgit)](https://github.com/jswidler/lockgit/releases)
+[![CircleCI](https://img.shields.io/circleci/build/github/jswidler/lockgit/master)](https://circleci.com/gh/jswidler/lockgit/tree/master)
+[![Go Report](https://goreportcard.com/badge/github.com/jswidler/lockgit)](https://goreportcard.com/report/github.com/jswidler/lockgit)
+[![Go Lang](https://img.shields.io/github/go-mod/go-version/jswidler/lockgit)](https://golang.org)
+
 # 
 
 Storing secrets in Git is dangerous and sometimes even considered a bad practice.
