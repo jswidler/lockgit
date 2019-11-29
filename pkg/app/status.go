@@ -75,7 +75,7 @@ func Status(opts Options) ([]string, [][]string) {
 		table = append(table, []string{
 			filemeta.RelPath,
 			updated,
-			firstMatchedPattern(datafile.Path(), ctx.Config.Patterns),
+			firstMatchedPattern(filemeta.RelPath, ctx.Config.Patterns),
 			filemeta.IdString(),
 		})
 	}
