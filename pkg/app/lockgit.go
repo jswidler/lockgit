@@ -64,7 +64,7 @@ func openFromVault(ctx c.Context, filemeta c.Filemeta, params Options) error {
 		return err
 	}
 	absPath := filepath.Join(ctx.ProjectPath, datafile.Path())
-	_ = os.Mkdir(filepath.Dir(absPath), 0755)
+	_ = os.MkdirAll(filepath.Dir(absPath), 0755)
 	err = ioutil.WriteFile(absPath, data, os.FileMode(datafile.Perm()))
 	if err != nil {
 		return err
