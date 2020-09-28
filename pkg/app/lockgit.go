@@ -40,7 +40,11 @@ func openFromVault(ctx c.Context, filemeta c.Filemeta, params Options) error {
 		datafile, err := c.NewDatafile(ctx, filemeta.AbsPath)
 		if err == nil {
 			// Able to read the file
-			if datafile.MatchesCurrent(filemeta) {
+			matches, err := datafile.MatchesCurrent(filemeta)
+			if err != nil {
+				return err
+			}
+			if matches {
 				log.Verbose(fmt.Sprintf("skipping %s - file exists and is unchanged",
 					ctx.RelPath(filemeta.AbsPath)))
 				return nil
@@ -87,7 +91,10 @@ func deletePlaintextFile(ctx c.Context, filemeta c.Filemeta, params Options) err
 			return err
 		}
 
-		if !datafile.MatchesCurrent(filemeta) {
+		matches, err := datafile.MatchesCurrent(filemeta)
+		if err != nil {
+			return err
+		} else if !matches {
 			return fmt.Errorf("%s has changed.  To delete anyway enable --force\n", ctx.RelPath(filemeta.AbsPath))
 		}
 	}
@@ -118,7 +125,10 @@ func addFile(ctx c.Context, manifest *c.Manifest, absPath string, opts Options) 
 	}
 	filemeta := c.NewFilemeta(absPath, datafile)
 
-	datafile.Write(filemeta)
+	err = datafile.Write(filemeta)
+	if err != nil {
+		return err
+	}
 
 	if mindx >= 0 {
 		oldDatafile := c.MakeDatafilePath(ctx, manifest.Files[mindx])

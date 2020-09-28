@@ -268,7 +268,11 @@ func Commit(opts Options) error {
 			continue
 		}
 
-		if !datafile.MatchesCurrent(filemeta) {
+		fileMatches, err := datafile.MatchesCurrent(filemeta)
+		if err != nil {
+			log.LogError(err)
+			hadError = true
+		} else if !fileMatches {
 			err := addFile(ctx, &manifest, filemeta.AbsPath, opts)
 			if err != nil {
 				log.LogError(err)
@@ -303,7 +307,7 @@ func OpenVault(opts Options) {
 	ctx, manifest := loadcm(opts.Wd, loadcmopts{keyRequired: true, notEmpty: true})
 	for _, filemeta := range manifest.Files {
 		if err := openFromVault(ctx, filemeta, opts); err != nil {
-			log.LogError(errors.Wrapf(err, "error extracting secret"))
+			log.LogError(errors.Wrapf(err, "error opening '%s': %s", filemeta.RelPath, err))
 		}
 	}
 }

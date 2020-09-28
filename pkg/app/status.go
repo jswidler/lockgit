@@ -65,7 +65,12 @@ func Status(opts Options) ([]string, [][]string) {
 			}
 			updated = "unavailable"
 		} else {
-			updated = strconv.FormatBool(!datafile.MatchesCurrent(filemeta))
+			matches, err := datafile.MatchesCurrent(filemeta)
+			if err != nil {
+				updated = "unable to compare"
+			} else {
+				updated = strconv.FormatBool(!matches)
+			}
 		}
 
 		patternMatched = util.Filter(patternMatched, func(path string) bool {

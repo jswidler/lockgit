@@ -28,6 +28,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -83,17 +84,21 @@ func (d Datafile) Perm() int {
 	return d.content.Perm
 }
 
-func (d Datafile) Serialize() []byte {
+func (d Datafile) Serialize() ([]byte, error) {
 	jsondata, err := json.Marshal(d.content)
-	log.FatalPanic(err)
+	if err != nil {
+		return nil, err
+	}
 	return encrypt(d.ctx.Key, compress(jsondata))
 }
 
-func (d Datafile) Write(filemeta Filemeta) {
+func (d Datafile) Write(filemeta Filemeta) error {
 	path := MakeDatafilePath(*d.ctx, filemeta)
-	ciphertext := d.Serialize()
-	err := ioutil.WriteFile(path, ciphertext, 0644)
-	log.FatalPanic(err)
+	ciphertext, err := d.Serialize()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, ciphertext, 0644)
 }
 
 func MakeDatafilePath(ctx Context, filemeta Filemeta) string {
@@ -109,13 +114,12 @@ func (d Datafile) Id() []byte {
 }
 
 // Tests if a potential Datafile update matches the one already in the vault
-func (d Datafile) MatchesCurrent(filemeta Filemeta) bool {
+func (d Datafile) MatchesCurrent(filemeta Filemeta) (bool, error) {
 	currentDatafile, err := ReadDatafile(*d.ctx, filemeta)
 	if err != nil {
-		// If we can't read the datafile, just say it doesn't match it
-		return false
+		return false, err
 	}
-	return currentDatafile.Equal(d)
+	return currentDatafile.Equal(d), nil
 }
 
 func (d Datafile) Equal(other Datafile) bool {
@@ -131,7 +135,14 @@ func ReadDatafile(ctx Context, filemeta Filemeta) (Datafile, error) {
 	if err != nil {
 		return data, err
 	}
-	plaintext := decompress(decrypt(ctx.Key, ciphertext))
+	compressed, err := decrypt(ctx.Key, ciphertext)
+	if err != nil {
+		return data, err
+	}
+	plaintext, err := decompress(compressed)
+	if err != nil {
+		return data, err
+	}
 	err = json.Unmarshal(plaintext, &data.content)
 	return data, err
 }
@@ -148,37 +159,52 @@ func compress(data []byte) []byte {
 	return b.Bytes()
 }
 
-func decompress(data []byte) []byte {
+func decompress(data []byte) ([]byte, error) {
 	var out bytes.Buffer
 	b := bytes.NewBuffer(data)
-	r, _ := zlib.NewReader(b)
-	io.Copy(&out, r)
-	r.Close()
-	return out.Bytes()
+	r, err := zlib.NewReader(b)
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(&out, r)
+	if err != nil {
+		return nil, err
+	}
+	err = r.Close()
+	if err != nil {
+		log.LogError(fmt.Errorf("zlib reader close error: %v", err))
+	}
+	return out.Bytes(), nil
 }
 
-func encrypt(key, plaintext []byte) []byte {
+func encrypt(key, plaintext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
-	log.FatalPanic(err)
+	if err != nil {
+		return nil, err
+	}
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
 	iv := ciphertext[:aes.BlockSize]
 	_, err = io.ReadFull(rand.Reader, iv)
-	log.FatalPanic(err)
+	if err != nil {
+		return nil, err
+	}
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
-	return ciphertext
+	return ciphertext, nil
 }
 
-func decrypt(key, ciphertext []byte) []byte {
+func decrypt(key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
-	log.FatalPanic(err)
+	if err != nil {
+		return nil, err
+	}
 	if len(ciphertext) < aes.BlockSize {
-		panic("blocksize is too small")
+		return nil, errors.New("blocksize is too small")
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
 	stream := cipher.NewCFBDecrypter(block, iv)
 	// XORKeyStream can work in-place if the two arguments are the same.
 	stream.XORKeyStream(ciphertext, ciphertext)
-	return ciphertext
+	return ciphertext, nil
 }
